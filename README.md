@@ -1,1 +1,1 @@
-# oo-ddqn
+# Object-Oriented DQN
