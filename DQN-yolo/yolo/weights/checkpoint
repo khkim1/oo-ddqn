@@ -1,0 +1,2 @@
+model_checkpoint_path: "/output/save.ckpt-251721"
+all_model_checkpoint_paths: "/output/save.ckpt-251721"
