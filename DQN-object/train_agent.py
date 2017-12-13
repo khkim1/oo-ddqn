@@ -32,10 +32,10 @@ if __name__ == '__main__':
         if episode % config['episodes_validate']==0 and episode != 0:
         #if agent.steps % config['steps_validate'] == 0:
             print('Validate....\n==============')
-            scores = [agent.validate_episode(epsilon=0.05) for i in range(config['episodes_validate_runs'])]
+            scores = [agent.validate_episode(epsilon=0.0) for i in range(config['episodes_validate_runs'])]
             agent._update_validation_reward(np.mean(scores))
             print(scores)
-            f = open('learning_curves/trial13/rewards4.txt', 'a')
+            f = open('learning_curves/trial13/rewards6.txt', 'a')
             f.write('%d, %d, %f, %f\n' %(agent.steps, episode, avg_trng_reward, np.mean(scores)))
             f.close()
 

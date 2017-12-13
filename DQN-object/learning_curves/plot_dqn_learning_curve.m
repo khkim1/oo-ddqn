@@ -1,6 +1,6 @@
 cd('/home/vision/Desktop/relDQN/DQN-object/learning_curves/trial13')
 
-name = 'rewards4.txt';
+name = 'rewards5.txt';
 %name = 'rewards_gpu.txt'; 
 
 fid = fopen(name);

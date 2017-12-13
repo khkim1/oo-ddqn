@@ -23,7 +23,7 @@ class Experience(object):
 
         :param state:
         :param action:
-        :param reward:
+        :param reward:step_eps_mul
         :param done:
         :return:
         """
