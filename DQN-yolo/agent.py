@@ -121,7 +121,7 @@ class QAgent(object):
             new_frame], axis=1)
         '''
         return np.concatenate([
-            old_state[:, 1100:, :],
+            old_state[:, 1108:, :],
             new_frame], axis=1)
 
 
@@ -131,7 +131,7 @@ class QAgent(object):
         :return:
         """
         return np.concatenate([
-                    np.zeros((1, self.config['state_shape'][1] - 1100, 1)),
+                    np.zeros((1, self.config['state_shape'][1] - 1108, 1)),
                     self.detector.detect(self.env.reset())
                 ],axis=1)
 

@@ -7,7 +7,7 @@ from yolo import YOLONet
 from timer import Timer
 import data_reader as reader
 import matplotlib.pyplot as plt
-
+import keras
 
 class Detector(object):
 
@@ -55,13 +55,60 @@ class Detector(object):
     def cut_scale(self, img):
         img = img[30:150, 7:, :] # Cutting image
         img = cv2.resize(img, (84, 84), interpolation = cv2.INTER_AREA)
+        img = img / 255.
         return np.expand_dims(img, 0)
 
+    def get_lifebar(self, img):
+        # Get x coordinates, where pixel values white
+        coord = np.where(img[:, :, 0] == 214)
+
+        # Get life bar length normalized
+        lifebar = np.array([coord[1].size / 315.])
+
+        return lifebar.reshape((1, 1, 1))
+
+
+    def get_divers(self, img):
+        # average coordinates for different number of divers
+        diver_dic = {0: 0,
+               61: 1,
+               65: 2,
+               69: 3,
+               73: 4,
+               77: 5,
+               81: 6}
+        # coordinates for divers
+        diver_pixels = np.where(img[:, :, 2] == 167)
+
+        # average coordinate for divers
+        diver_coord = np.floor(np.mean(diver_pixels[1]))
+
+        # average y coordinate for divers
+        y_coord = np.floor(np.mean(diver_pixels[0]))
+
+        if (not np.isnan(y_coord)) and y_coord != 181:
+            print('Diver detection failed')
+
+        # Check if there are no divers collected
+        if np.isnan(diver_coord):
+            diver_coord = 0
+
+        # Get number of divers collected
+        num_divers = diver_dic[diver_coord]
+
+        # One hot encode number of divers
+        num_divers_onehot = keras.utils.to_categorical(num_divers, num_classes=7)
+
+        return num_divers_onehot.reshape((1, 7, 1))
+
+
     def detect(self, img):
+        lifebar = self.get_lifebar(img)
+        num_divers_onehot = self.get_divers(img)
         inputs = self.cut_scale(img)
         net_output = self.sess.run(self.net.logits,
         feed_dict={self.net.images: inputs})
-        net_output = net_output.reshape((1, 1100, 1))
+        net_output = np.concatenate([net_output.reshape((1, 1100, 1)), lifebar, num_divers_onehot], axis=1)
         return net_output
 
     def detect_from_cvmat(self, inputs):

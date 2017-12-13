@@ -105,7 +105,7 @@ object_pong_config = {
 
 object_seaquest_config = {
     'double_q': True,
-    'double_q_freq': 10000,
+    'double_q_freq': 5000,
 
     'game': 'SeaquestDeterministic-v4',
     'frame': preprocess_atari_object,
@@ -113,7 +113,7 @@ object_seaquest_config = {
     'q_params': {},
     'actions': 18,
     'state_dtype': np.float32,
-    'state_shape': [1, 4400],
+    'state_shape': [1, 4432],
     'state_memory': 10 ** 6,
     'state_time': 1,
 

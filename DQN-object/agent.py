@@ -195,8 +195,8 @@ class QAgent(object):
                 new_frame, reward, done,_ = self.act(state=state, epsilon=epsilon, store=False)
             state = self.update_state(old_state=state, new_frame=new_frame)
 
-            if reward == 0.1: 
-                reward = 0 
+            if reward == 0.1:
+                reward = 0
 
             total_reward += reward
             if visualise:
@@ -231,12 +231,12 @@ class QAgent(object):
 
         #print(state[0, 20, 0])
 
-        if rs and state[0, 68, 0] > 0 and state[0, 62, 0] > 0 and new_frame[0, 2, 0] > 0:  
+        if rs and state[0, 68, 0] > 0 and state[0, 62, 0] > 0 and new_frame[0, 2, 0] > 0:
             v_before = state[0, 68, 0] - state[0, 62, 0]
             v_after = new_frame[0, 2, 0] - state[0, 68, 0]
             #print(v_after)
             #print(v_before)
-            if v_after < 0 and v_before > 0: 
+            if v_after < 0 and v_before > 0:
                 reward = 0.1
 
         #print(reward)
@@ -278,7 +278,7 @@ class QAgent(object):
                 store_done = True
                 self.ale_lives = info['ale.lives']
             self.replay_memory.add(state[:,:,-1],action,reward,store_done)
-        
+
         return new_frame, reward, done, info
 
 

@@ -73,7 +73,7 @@ pong_config = {
 
 object_pong_config = {
     'double_q': True,
-    'double_q_freq': 10000,
+    'double_q_freq': 2500,
 
     'game': 'PongDeterministic-v4',
     'frame': preprocess_atari_object,
@@ -81,12 +81,12 @@ object_pong_config = {
     'q_params': {},
     'actions': 6,
     'state_dtype': np.float32,
-    'state_shape': [1, 102],
+    'state_shape': [1, 72],
     'state_memory': 10 ** 6,
     'state_time': 1,
 
     'episodes': 2500,
-    'episodes_validate': 20,
+    'episodes_validate': 40,
     'episodes_validate_runs': 5,
     'episodes_save_interval': 25,
     'tensorboard_interval':1000,

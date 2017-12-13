@@ -104,7 +104,7 @@ class StateDQN(DQN):
         x = tf.layers.dense(x, units=512, activation=tf.nn.relu, name='fc3')
         x = tf.layers.dense(x, units=512, activation=tf.nn.relu, name='fc4')
         x = tf.layers.dense(x, units=512, activation=tf.nn.relu, name='fc5')
-        x = tf.layers.dense(x, units=512, activation=tf.nn.relu, name='fc6')
+        x = tf.layers.dense(x, units=256, activation=tf.nn.relu, name='fc6')
         return tf.layers.dense(x, units=self.num_actions, activation=None, name='q_hat')
 
 

@@ -84,7 +84,7 @@ class DQN(object):
     def _create_train_ops(self, optimiser):
         if optimiser is None:
             # 0.001 for object
-            optimiser = tf.train.RMSPropOptimizer(learning_rate=0.0005, momentum=0.95, epsilon=0.01)
+            optimiser = tf.train.RMSPropOptimizer(learning_rate=0.001, momentum=0.95, epsilon=0.01)
         grads_and_vars = optimiser.compute_gradients(self.loss, var_list=[v for v in tf.trainable_variables() if v.name.startswith('Q_network/')])
         train_op = optimiser.apply_gradients(grads_and_vars=grads_and_vars, global_step=self.global_step)
         return train_op

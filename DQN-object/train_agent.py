@@ -18,7 +18,7 @@ if __name__ == '__main__':
     reward_list = []
 
     for episode in range(config['episodes']):
-        print('\n\nepisode: %d, step: %d, eps: %.4f\n\n---------------------' % (episode, agent.steps, agent.epsilon))
+        print('episode: %d, step: %d, eps: %.4f' % (episode, agent.steps, agent.epsilon))
         # Store the rewards...
         cur_trng_reward = agent.train_episode()
         agent._update_training_reward(cur_trng_reward)
@@ -29,13 +29,13 @@ if __name__ == '__main__':
 
         avg_trng_reward = np.mean(reward_list)
 
-        if episode % config['episodes_validate']==0:
+        if episode % config['episodes_validate']==0 and episode != 0:
         #if agent.steps % config['steps_validate'] == 0:
             print('Validate....\n==============')
-            scores = [agent.validate_episode(epsilon=0.0) for i in range(config['episodes_validate_runs'])]
+            scores = [agent.validate_episode(epsilon=0.05) for i in range(config['episodes_validate_runs'])]
             agent._update_validation_reward(np.mean(scores))
             print(scores)
-            f = open('learning_curves/ooddqn_errorbar2/rewards1.txt', 'a')
+            f = open('learning_curves/trial13/rewards4.txt', 'a')
             f.write('%d, %d, %f, %f\n' %(agent.steps, episode, avg_trng_reward, np.mean(scores)))
             f.close()
 

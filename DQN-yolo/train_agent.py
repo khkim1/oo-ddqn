@@ -18,7 +18,7 @@ if __name__ == '__main__':
     reward_list = []
 
     for episode in range(config['episodes']):
-        print('\nepisode: %d, step: %d, eps: %.4f\n\n---------------------' % (episode, agent.steps, agent.epsilon))
+        print('episode: %d, step: %d, eps: %.4f' % (episode, agent.steps, agent.epsilon))
         # Store the rewards...
         cur_trng_reward = agent.train_episode()
         agent._update_training_reward(cur_trng_reward)
@@ -32,15 +32,18 @@ if __name__ == '__main__':
         tol = 1e-5
         if episode % config['episodes_validate']==0 and episode != 0:
         #if agent.steps % config['steps_validate'] == 0:
-            eps = 0.1 + np.min([40.0/(episode+tol), 0.9])
+            #eps = 0.1 + np.min([40.0/(episode+tol), 0.9])
+            eps = 0.1
             print('Validate....\n==============')
             scores = [agent.validate_episode(epsilon=eps) for i in range(config['episodes_validate_runs'])]
             agent._update_validation_reward(np.mean(scores))
             print('epsilon: %f' %eps)
             print(scores)
-            f = open('learning_curves/trial1/rewards3.txt', 'a')
+            f = open('learning_curves/trial2/rewards3.txt', 'a')
             f.write('%d, %d, %f, %f\n' %(agent.steps, episode, avg_trng_reward, np.mean(scores)))
             f.close()
+            if episode % 200 == 0 and episode != 0:
+                agent.validate_episode(epsilon=eps, visualise=True)
 
         '''
         # Store every validation interval
