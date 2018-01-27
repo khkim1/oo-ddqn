@@ -116,11 +116,18 @@ class MCTS(object):
             + coeff * sqrt(log(node.parent.visit_count) / node.visit_count))
     return func
 
-  def reset(self):
+  def reset(self, action=None):
     """
-    Wipes the tree, so a new search can begin.
+    Resets the search tree.
+    If action is given, subtree starting with that action is preserved.
     """
-    self.root = Node()
+    if action:
+      for child in self.root.children:
+        if child.action == action:
+          self.root = child
+          break
+    else:
+      self.root = Node()
 
   def step(self):
     """
@@ -162,7 +169,7 @@ class MCTS(object):
 
     self.model.restore(snapshot)
 
-  def run(self):
+  def plan(self):
     for it in range(self.num_rollouts):
       debug('Iteration %d' % (it+1))
       self.step()
