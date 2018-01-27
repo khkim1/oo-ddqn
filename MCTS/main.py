@@ -1,9 +1,6 @@
 import argparse, os, sys, time
 import numpy as np
 
-from matplotlib import pyplot as plt
-import seaborn as sns; sns.palplot(sns.color_palette("husl", 8))
-
 from model import GymModel
 from mcts import MCTS
 
@@ -81,14 +78,6 @@ def main():
         % (ep, args.num_episodes, steps, time.time()-ep_start_time))
     np.save('%s/ep_%03d_rewards.npy' % (dir_name, ep), np.array(rewards))
     np.save('%s/ep_%03d_actions.npy' % (dir_name, ep), np.array(actions))
-
-  # result = np.vstack(result).T
-  # y = result.mean(axis=0)
-  # std = result.std(axis=0)
-  # plt.figure(figsize=(8,6))
-  # plt.plot(x, y)
-  # plt.fill_between(x, y-std, y+std, alpha=0.5)
-  # plt.savefig('plot_%s.pdf' % sys.argv[1])
 
 
 if __name__ == '__main__':
