@@ -32,8 +32,8 @@ def run_episode(
 
     if render:
       action_name = action_map[action] if action_map else str(action)
-      print('[Step %05d] action: %s, reward: %f, Q: [%s]' %
-          (steps, action_name, r, ', '.join([str(x[1]) for x in q_values])))
+      print('[Step %05d] action: %s, reward: %f, Q: [%s]' % (
+        steps, action_name, reward, ', '.join([str(x[1]) for x in q_values])))
       model.render()
 
     mcts.reset(action=action)
@@ -53,13 +53,17 @@ def main():
                       help='Max number of steps before episode is stopped')
   parser.add_argument('-ne', '--num_episodes', type=int, default=50,
                       help='Number of episodes to run the experiment for')
+  parser.add_argument('--render', default=False, action='store_true',
+                      help='If true, render the environment at every step')
   args = parser.parse_args()
 
   # Set up experiment directory and log file
   exp_name = 'nr_%d.ne_%d.md_%d.mh_%s' % (args.num_rollouts, args.num_episodes,
           args.max_depth, str(args.max_horizon))
   dir_name = '%s.%s' % (args.env_name, exp_name)
-  if not os.path.exists(dir_name): os.makedirs(dir_name)
+  if os.path.exists(dir_name):
+    print('Directory %s already exists! Quitting' % dir_name)
+  os.makedirs(dir_name)
   logfile = open('%s/log.txt' % dir_name, 'w')
   def writelog(msg):
     logfile.write(msg + '\n')
@@ -73,6 +77,7 @@ def main():
     ep_start_time = time.time()
     rewards, actions, steps = run_episode(
         args.env_name, 
+        render=args.render,
         max_horizon=args.max_horizon,
         num_rollouts=args.num_rollouts,
         max_depth=args.max_depth)

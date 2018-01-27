@@ -8,20 +8,6 @@ from math import sqrt, log
 import random, time
 
 
-# For debugging statements
-_DEBUG = False
-def debug(msg):
-  global _DEBUG
-  if _DEBUG:
-    timestr = '[%s] ' % time.strftime('%Y-%m-%d %H:%M:%S')
-    indent = len(timestr) * ' '
-    lines = msg.split('\n')
-    if lines:
-      print(timestr + lines[0])
-      for line in lines[1:]:
-        print(indent + line)
-
-
 class Node(object):
   """
   Represents a single node of the search tree, corresponding to a state.
@@ -139,8 +125,6 @@ class MCTS(object):
     node = self.root
 
     # Step 1: select
-    debug('  --> first action scores: [%s]'
-        % ', '.join([('%.2f' % self.score_fn(x)) for x in node.children]))
     while not node.is_leaf():
       node = self.tree_policy(node)
       reward, _ = self.model.step(node.action)
@@ -148,7 +132,6 @@ class MCTS(object):
 
     # Step 2:  expand
     node.expand(self.model.actions)
-    debug('  --> number of nodes: %d' % self.root.num_nodes)
 
     # Step 3: rollout
     step_cnt = 0
@@ -159,8 +142,6 @@ class MCTS(object):
       step_cnt += 1
       if done:
         break
-    debug('  --> rollout steps: %d, total reward: %.2f '
-        % (step_cnt, total_reward))
 
     # Step 4: backpropagate
     while node:
@@ -171,7 +152,6 @@ class MCTS(object):
 
   def plan(self):
     for it in range(self.num_rollouts):
-      debug('Iteration %d' % (it+1))
       self.step()
 
     return [(x.action, x.value) for x in self.root.children]
