@@ -7,7 +7,7 @@ from mcts import MCTS
 
 def run_episode(
     env_name, max_horizon=None, max_depth=None, num_rollouts=None,
-    action_map=None, render=False):
+    action_map=None, render=False, log_progress=True):
   assert max_depth and num_rollouts
   model = GymModel(env_name)
   model.reset()
@@ -22,7 +22,9 @@ def run_episode(
     steps += 1
     
     # Plan with MCTS
+    start_time = time.time()
     q_values = mcts.plan()
+    plan_time = time.time() - start_time
     action, value = max(q_values, key=lambda x: x[1]) 
 
     # Take a step in the actual model
@@ -30,10 +32,13 @@ def run_episode(
     actions.append(action)
     rewards.append(reward)
 
-    if render:
+    if log_progress:
       action_name = action_map[action] if action_map else str(action)
-      print('[Step %05d] action: %s, reward: %f, Q: [%s]' % (
-        steps, action_name, reward, ', '.join([str(x[1]) for x in q_values])))
+      print('[Step %05d] action: %s, reward: %.2f, Q: [%s] (%.3f sec)'
+          % (steps, action_name, reward,
+            ', '.join([str(x[1]) for x in q_values]), plan_time))
+
+    if render:
       model.render()
 
     mcts.reset(action=action)
@@ -55,6 +60,8 @@ def main():
                       help='Number of episodes to run the experiment for')
   parser.add_argument('--render', default=False, action='store_true',
                       help='If true, render the environment at every step')
+  parser.add_argument('-q', '--quiet', default=False, action='store_true',
+                      help='If true, do not print progress at every step')
   args = parser.parse_args()
 
   # Set up experiment directory and log file
@@ -78,6 +85,7 @@ def main():
     rewards, actions, steps = run_episode(
         args.env_name, 
         render=args.render,
+        log_progress=not args.quiet,
         max_horizon=args.max_horizon,
         num_rollouts=args.num_rollouts,
         max_depth=args.max_depth)

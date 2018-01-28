@@ -127,7 +127,8 @@ class MCTS(object):
     # Step 1: select
     while not node.is_leaf():
       node = self.tree_policy(node)
-      reward, _ = self.model.step(node.action)
+      # reward, _ = self.model.step(node.action)
+      reward, _ = snapshot.step(node.action)
       total_reward += reward
 
     # Step 2:  expand
@@ -137,7 +138,8 @@ class MCTS(object):
     step_cnt = 0
     while step_cnt < self.max_depth:
       # Take random action
-      reward, done = self.model.step(random.choice(self.model.actions))
+      # reward, done = self.model.step(random.choice(self.model.actions))
+      reward, done = snapshot.step(random.choice(self.model.actions))
       total_reward += reward
       step_cnt += 1
       if done:
@@ -148,7 +150,8 @@ class MCTS(object):
       node.update(total_reward)
       node = node.parent
 
-    self.model.restore(snapshot)
+    # self.model.restore(snapshot)
+    del snapshot
 
   def plan(self):
     for it in range(self.num_rollouts):

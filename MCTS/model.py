@@ -10,7 +10,6 @@ from gym.envs.toy_text import frozen_lake, discrete
 from gym.envs.registration import register
 
 
-
 class Model:
   __metaclass__ = abc.ABCMeta
 
@@ -36,6 +35,9 @@ class GymModel(Model):
   def __init__(self, env):
     if isinstance(env, str):
       self.env = gym.make(env)
+      # Use standard wrappers for Atari envs.
+      # if isinstance(self.env.unwrapped, gym.envs.atari.AtariEnv):
+      #   self.env = wrap_deepmind(self.env)
       self.env.reset()
     elif isinstance(env, gym.Env):
       self.env = env
@@ -58,8 +60,8 @@ class GymModel(Model):
       raise NotImplementedError
 
   def snapshot(self):
-    self.env.render(close=True)
-    return copy.deepcopy(self.env)
+    # self.env.render(close=True)
+    return copy.deepcopy(self)
 
   def restore(self, snapshot):
     self.env = snapshot
