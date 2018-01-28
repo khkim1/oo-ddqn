@@ -34,9 +34,8 @@ def run_episode(
 
     if log_progress:
       action_name = action_map[action] if action_map else str(action)
-      print('[Step %05d] action: %s, reward: %.2f, Q: [%s] (%.3f sec)'
-          % (steps, action_name, reward,
-            ', '.join([str(x[1]) for x in q_values]), plan_time))
+      print('[Step %05d] action: %s, reward: %.2f, return: %.2f, Q: [%s] (%.3f sec)'
+          % (steps, action_name, reward, sum(rewards), ', '.join([str(x[1]) for x in q_values]), plan_time))
 
     if render:
       model.render()
@@ -72,7 +71,8 @@ def main():
     print('Directory %s already exists! Quitting' % dir_name)
   os.makedirs(dir_name)
   logfile = open('%s/log.txt' % dir_name, 'w')
-  def writelog(msg):
+  def writelog(msg, stdout=True):
+    print(msg)
     logfile.write(msg + '\n')
     logfile.flush()
   writelog('Hyperparameters')
@@ -89,7 +89,7 @@ def main():
         max_horizon=args.max_horizon,
         num_rollouts=args.num_rollouts,
         max_depth=args.max_depth)
-    writelog('ep %03d/%03d finished in %d steps (%.2f sec) with return %.2f' % (
+    writelog('Ep %03d/%03d finished in %d steps (%.2f sec) with return %.2f' % (
         ep, args.num_episodes, steps, time.time()-ep_start_time, sum(rewards)))
     np.save('%s/ep_%03d_rewards.npy' % (dir_name, ep), np.array(rewards))
     np.save('%s/ep_%03d_actions.npy' % (dir_name, ep), np.array(actions))
