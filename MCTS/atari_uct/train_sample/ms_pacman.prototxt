@@ -1,0 +1,159 @@
+name: "UCC"
+layer {
+  name: "atari"
+  type: "TextData"
+  top: "data"
+  top: "label"
+  include {
+    phase: TRAIN
+  }
+  text_data_param {
+    source: "../output/frames"
+    label: "../output/act"
+    mean_file: "../output/ms_pacman_mean.binaryproto"
+    var_file: "../output/ms_pacman_var.binaryproto"
+    batch_size: 100
+    height: 336
+    width: 84
+    load_start: 1
+    load_end: 503
+    shuffle: true
+  }
+}
+layer {
+  name: "atari"
+  type: "TextData"
+  top: "data"
+  top: "label"
+  include {
+    phase: TEST
+  }
+  text_data_param {
+   source: "../output/frames"
+    label: "../output/act"
+    mean_file: "../output/ms_pacman_mean.binaryproto"
+    var_file: "../output/ms_pacman_var.binaryproto"
+    batch_size: 100
+    height: 336
+    width: 84
+    load_start: 504
+    load_end: 703
+    shuffle: true
+  }
+}
+layer {
+  name: "reshape"
+  type: "Reshape"
+  bottom: "data"
+  top: "data_reshape"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 4
+      dim: 84
+      dim: 84
+    }
+  }
+}
+layer {
+  name: "conv1"
+  type: "Convolution"
+  bottom: "data_reshape"
+  top: "conv1"
+  param { lr_mult: 1 decay_mult: 1}
+  param { lr_mult: 2 decay_mult: 0}
+  convolution_param {
+    num_output: 16
+    kernel_size: 8
+    stride: 4
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+  
+}
+layer {
+  name: "relu1"
+  type: "ReLU"
+  bottom: "conv1"
+  top: "conv1"
+}
+layer {
+  name: "conv2"
+  type: "Convolution"
+  bottom: "conv1"
+  top: "conv2"
+  param { lr_mult: 1 decay_mult: 1}
+  param { lr_mult: 2 decay_mult: 0}
+  convolution_param {
+    num_output: 32
+    kernel_size: 4
+    stride: 2
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+  
+}
+layer {
+  name: "relu2"
+  type: "ReLU"
+  bottom: "conv2"
+  top: "conv2"
+}
+layer {
+  name: "ip1"
+  type: "InnerProduct"
+  bottom: "conv2"
+  top: "ip1"
+  inner_product_param {
+    num_output: 256
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer{
+  name: "relu3"
+  type: "ReLU"
+  bottom: "ip1"
+  top: "ip1"
+}
+layer {
+  name: "ip2"
+  type: "InnerProduct"
+  bottom: "ip1"
+  top: "ip2"
+  inner_product_param {
+    num_output: 256
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "softmax"
+  type: "SoftmaxWithLoss"
+  bottom: "ip2"
+  bottom: "label"
+  top: "loss"
+}
+
