@@ -1,0 +1,51 @@
+Determining if the pthread_create exist failed with the following output:
+Change Dir: /mnt/data/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/linux/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_2c2ff/fast"
+/usr/bin/make -f CMakeFiles/cmTC_2c2ff.dir/build.make CMakeFiles/cmTC_2c2ff.dir/build
+make[1]: Entering directory '/mnt/data/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/linux/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_2c2ff.dir/CheckSymbolExists.c.o
+/usr/bin/cc   -O3    -o CMakeFiles/cmTC_2c2ff.dir/CheckSymbolExists.c.o   -c /mnt/data/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/linux/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_2c2ff
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2c2ff.dir/link.txt --verbose=1
+/usr/bin/cc  -O3     -rdynamic CMakeFiles/cmTC_2c2ff.dir/CheckSymbolExists.c.o  -o cmTC_2c2ff 
+CMakeFiles/cmTC_2c2ff.dir/CheckSymbolExists.c.o: In function `main':
+CheckSymbolExists.c:(.text.startup+0x3): undefined reference to `pthread_create'
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_2c2ff.dir/build.make:98: cmTC_2c2ff] Error 1
+make[1]: Leaving directory '/mnt/data/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/linux/CMakeFiles/CMakeTmp'
+make: *** [Makefile:126: cmTC_2c2ff/fast] Error 2
+
+File /mnt/data/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/linux/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <pthread.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /mnt/data/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/linux/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_89ee3/fast"
+/usr/bin/make -f CMakeFiles/cmTC_89ee3.dir/build.make CMakeFiles/cmTC_89ee3.dir/build
+make[1]: Entering directory '/mnt/data/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/linux/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_89ee3.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -O3 -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_89ee3.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.10/Modules/CheckFunctionExists.c
+Linking C executable cmTC_89ee3
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_89ee3.dir/link.txt --verbose=1
+/usr/bin/cc  -O3 -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_89ee3.dir/CheckFunctionExists.c.o  -o cmTC_89ee3 -lpthreads 
+/usr/bin/ld: cannot find -lpthreads
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_89ee3.dir/build.make:98: cmTC_89ee3] Error 1
+make[1]: Leaving directory '/mnt/data/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/linux/CMakeFiles/CMakeTmp'
+make: *** [Makefile:126: cmTC_89ee3/fast] Error 2
+
+

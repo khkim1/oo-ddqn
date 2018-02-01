@@ -1,0 +1,9 @@
+/mnt/data/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/linux/CMakeFiles/install/strip.dir
+/mnt/data/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/linux/CMakeFiles/install.dir
+/mnt/data/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/linux/CMakeFiles/install/local.dir
+/mnt/data/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/linux/CMakeFiles/xitari.dir
+/mnt/data/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/linux/CMakeFiles/list_install_components.dir
+/mnt/data/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/linux/CMakeFiles/ale.dir
+/mnt/data/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/linux/CMakeFiles/xitari_shared.dir
+/mnt/data/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/linux/CMakeFiles/edit_cache.dir
+/mnt/data/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/linux/CMakeFiles/rebuild_cache.dir

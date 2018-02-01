@@ -1,0 +1,2 @@
+/Users/bluejay/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/osx/include/xitari/ale_interface.hpp
+/Users/bluejay/Dropbox/stanford/oodqn/repo/MCTS/fast/xitari/osx/lib/libxitari.a

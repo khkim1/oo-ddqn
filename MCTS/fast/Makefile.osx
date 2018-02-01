@@ -1,0 +1,21 @@
+# This will likely need to be changed to suit your installation.
+CXX := clang++ -std=c++11
+ALE_LIB := xitari/osx/lib
+ALE_INCLUDE := xitari/osx/include/xitari
+FLAGS := -I$(ALE_INCLUDE) -L$(ALE_LIB) -L/usr/local/lib
+LDFLAGS := -lxitari -O2 -lgflags -lglog -lopencv_core -lopencv_highgui -lopencv_videoio -lopencv_photo -lopencv_imgcodecs -lopencv_video -lopencv_ml -lopencv_imgproc -lopencv_core
+
+all: uctPlanner atariUCTPlanner 
+atariUCTPlanner: libxitari atariUCTPlanner.o uct.o atari.hpp
+	$(CXX) $(FLAGS) atariUCTPlanner.o uct.o -o atariUCTPlanner -pthread -fPIC -DNDEBUG $(LDFLAGS)
+atariUCTPlanner.o: libxitari atariUCTPlanner.cpp uct.hpp atari.hpp
+	$(CXX) $(FLAGS) -c atariUCTPlanner.cpp -o atariUCTPlanner.o -pthread -fPIC -DNDEBUG $(LDFLAGS)
+uctPlanner:	uctPlanner.o uct.o
+	$(CXX) $(FLAGS) uctPlanner.o uct.o  -o uctPlanner 
+uct.o:	uct.cpp	uct.hpp 
+	$(CXX)  uct.cpp -c -o uct.o
+uctPlanner.o:	uctPlanner.cpp  uct.hpp
+	$(CXX)  uctPlanner.cpp -c -o uctPlanner.o 
+
+clean: 
+	rm -f uctPlanner uctPlanner.o uct.o atariUCTPlanner atariUCTPlanner.o 
