@@ -119,8 +119,6 @@ void UCTPlanner::plan() {
     int depth = 0;
     while (true) {
       ++depth;
-      // cout << "(" << depth << "," << trajectory << ")" << endl;
-      //for(int depth = 0; ((maxDepth == -1) || (depth < maxDepth)); ++depth) {
       if (current->isTerminal_) {
         mcReturn = endEpisodeValue_;
         break;
