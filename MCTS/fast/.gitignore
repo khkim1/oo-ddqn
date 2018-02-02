@@ -1,0 +1,6 @@
+# Don't export platform-specific build output
+atariUCTPlanner
+atariUCTPlanner.o
+uct.o
+uctPlanner
+uctPlanner.o
