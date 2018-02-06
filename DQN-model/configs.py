@@ -85,7 +85,7 @@ object_pong_config = {
     'state_shape': [1, 108],
     'state_memory': 10 ** 6,
     'state_time': 1,
-    'model_state_shape': [1, 78],
+    'model_state_shape': [1, 24],
 
     'episodes': 2500,
     'episodes_validate': 100,

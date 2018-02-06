@@ -381,7 +381,7 @@ class QAgent(object):
         action_input[0, 0, action, 0] = 1
 
         state = state[np.newaxis].astype(np.float32)
-        state = state[:, :, -72:, :]
+        state = state[:, :, -18:, :]
 
         model_input = np.concatenate((state, action_input.astype(np.float32)), axis=2)
 
@@ -403,28 +403,33 @@ class QAgent(object):
             I = np.zeros((160, 160, 3))
 
             for idx in range(3):
+
+                # Display opponent paddle in Blue (opencv is BGR format)
                 if idx == 0 and model_predicted_state[3*idx+2] == 1:
-                    cv2.rectangle(I, (int((model_predicted_state[3*idx]+1)*79.5) - 2,
-                                      int((model_predicted_state[3*idx+1]+1)*79.5) - 8),
-                                     (int((model_predicted_state[3*idx]+1)*79.5) + 2,
-                                      int((model_predicted_state[3*idx+1]+1)*79.5) + 8), (255, 0, 0), 3)
+                    cv2.rectangle(I, (np.round((model_predicted_state[3*idx]+1)*79.5).astype(int) - 2,
+                                      np.round((model_predicted_state[3*idx+1]+1)*79.5).astype(int) - 8),
+                                     (np.round((model_predicted_state[3*idx]+1)*79.5).astype(int) + 2,
+                                      np.round((model_predicted_state[3*idx+1]+1)*79.5).astype(int) + 8), (255, 0, 0), 3)
 
-
+                # Display ball in Green
                 elif idx == 1 and model_predicted_state[3*idx+2] == 1:
-                    cv2.rectangle(I, (int((model_predicted_state[3*idx]+1)*79.5) - 1,
-                                      int((model_predicted_state[3*idx+1]+1)*79.5) - 2),
-                                     (int((model_predicted_state[3*idx]+1)*79.5) + 1,
-                                      int((model_predicted_state[3*idx+1]+1)*79.5) + 2), (0, 255, 0), 3)
+                    cv2.rectangle(I, (np.round((model_predicted_state[3*idx]+1)*79.5).astype(int) - 1,
+                                      np.round((model_predicted_state[3*idx+1]+1)*79.5).astype(int) - 2),
+                                     (np.round((model_predicted_state[3*idx]+1)*79.5).astype(int) + 1,
+                                      np.round((model_predicted_state[3*idx+1]+1)*79.5).astype(int) + 2), (0, 255, 0), 3)
 
+                # Display your paddle in Red
                 elif idx == 2 and model_predicted_state[3*idx+2] == 1:
-                    cv2.rectangle(I, (int((model_predicted_state[3*idx]+1)*79.5) - 2,
-                                      int((model_predicted_state[3*idx+1]+1)*79.5) - 8),
-                                     (int((model_predicted_state[3*idx]+1)*79.5) + 2,
-                                      int((model_predicted_state[3*idx+1]+1)*79.5) + 8), (0, 0, 255), 3)
+                    cv2.rectangle(I, (np.round((model_predicted_state[3*idx]+1)*79.5).astype(int) - 2,
+                                      np.round((model_predicted_state[3*idx+1]+1)*79.5).astype(int) - 8),
+                                     (np.round((model_predicted_state[3*idx]+1)*79.5).astype(int) + 2,
+                                      np.round((model_predicted_state[3*idx+1]+1)*79.5).astype(int) + 8), (0, 0, 255), 3)
                 '''
                 cv2.circle(I, (int((model_predicted_state[3*idx]+1)*79.5),
                                int((model_predicted_state[3*idx+1]+1)*79.5)), 1, (255, 255, 255), -1)
                 '''
+
+            I = cv2.resize(I, None, fx=2, fy=2, interpolation=cv2.INTER_LINEAR)
 
             print(model_predicted_state)
             print('--------------------')
@@ -494,7 +499,7 @@ class QAgent(object):
 
         # State batch = same for all models
         xp_states = xp_states.astype(np.float32)
-        m_batch = np.concatenate((xp_states[:, :, -72:, :], action_input.astype(np.float32)), axis=2)
+        m_batch = np.concatenate((xp_states[:, :, -18:, :], action_input.astype(np.float32)), axis=2)
 
         # Joint next state batch
         m_targets = xp_next.astype(np.float32)
@@ -532,13 +537,11 @@ class QAgent(object):
         # Train all networks
         _, _, _, _, next_states, loss_ant, loss_ball, loss_pro, summaries, step, _, _, _ = self.session.run([self.net._train_op, self.model_ant._train_op, self.model_ball._train_op, self.model_pro._train_op, self.model_ball.next_state_batch, self.model_ant.loss, self.model_ball.loss, self.model_pro.loss, self.summaries, self.net.global_step, self.model_ant.global_step, self.model_ball.global_step, self.model_pro.global_step], feed_dict=feed)
 
-        '''
         if loop_count == 500:
             #m_batch = m_batch.reshape((self.config['batch_size'], self.config['model_state_shape'][1]))
             #print(m_batch[0:10, :])
-            #print(m_targets[0:10, :, -6:, :].reshape((10, 6)))
-            print(next_states[0:10, :])
-        '''
+            print(m_targets[0:5, :, -9:, :].reshape((5, 9)))
+            print(next_states[0:5, :])
 
         loss = [loss_ant, loss_ball, loss_pro]
 

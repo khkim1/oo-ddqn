@@ -80,7 +80,7 @@ def preprocess_atari_object(image):
     #object_coord = np.array([1., 1., 1., 1., 1., 1.])
     object_coord = np.zeros((9, ))
 
-    for idx, target in enumerate([92, 236, 213]):
+    for idx, target in enumerate([213, 236, 92]):
         coord_tuple = np.where(I[:, :, 0] == target)
 
         if len(coord_tuple[0]) > 0 and len(coord_tuple[1]) > 0:
