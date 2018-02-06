@@ -189,10 +189,11 @@ class Model(object):
 
     def _create_losses(self):
         #diff = tf.reduce_sum(tf.subtract(self.next_state_batch, self.m_targets), axis=1)
-        diff = tf.subtract(self.next_state_batch, self.m_targets)
+        diff = tf.subtract(self.next_state_batch[:, 0:2], self.m_targets[:, 0:2])
         loss = tf.reduce_mean(self._squared_loss(diff))
+        h_loss = tf.losses.hinge_loss(self.m_targets[:, 2], self.next_state_batch[:, 2])
         regulariser = self.regul_param * sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
-        return loss + regulariser
+        return loss + h_loss + regulariser
 
     def _create_train_ops(self, optimiser, name):
         if optimiser is None:

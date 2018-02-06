@@ -388,6 +388,11 @@ class QAgent(object):
         # Class-wise state prediction
         model_ant_prediction, model_ball_prediction, model_pro_prediction = self.session.run([self.model_ant.next_state, self.model_ball.next_state, self.model_pro.next_state], feed_dict={self.model_ant.x: model_input, self.model_ball.x: model_input, self.model_pro.x: model_input})
 
+
+        model_ant_prediction = self.update_presence(model_ant_prediction)
+        model_pro_prediction = self.update_presence(model_pro_prediction)
+        model_ball_prediction = self.update_presence(model_ball_prediction)
+
         # Concatenate into a joint model state
         model_prediction = np.concatenate((model_ant_prediction, model_ball_prediction, model_pro_prediction),
                                           axis=1)
@@ -398,27 +403,28 @@ class QAgent(object):
             I = np.zeros((160, 160, 3))
 
             for idx in range(3):
-                if idx == 0:
+                if idx == 0 and model_predicted_state[3*idx+2] == 1:
                     cv2.rectangle(I, (int((model_predicted_state[3*idx]+1)*79.5) - 2,
                                       int((model_predicted_state[3*idx+1]+1)*79.5) - 8),
                                      (int((model_predicted_state[3*idx]+1)*79.5) + 2,
                                       int((model_predicted_state[3*idx+1]+1)*79.5) + 8), (255, 0, 0), 3)
 
 
-                elif idx == 1:
+                elif idx == 1 and model_predicted_state[3*idx+2] == 1:
                     cv2.rectangle(I, (int((model_predicted_state[3*idx]+1)*79.5) - 1,
                                       int((model_predicted_state[3*idx+1]+1)*79.5) - 2),
                                      (int((model_predicted_state[3*idx]+1)*79.5) + 1,
                                       int((model_predicted_state[3*idx+1]+1)*79.5) + 2), (0, 255, 0), 3)
 
-                elif idx == 2:
+                elif idx == 2 and model_predicted_state[3*idx+2] == 1:
                     cv2.rectangle(I, (int((model_predicted_state[3*idx]+1)*79.5) - 2,
                                       int((model_predicted_state[3*idx+1]+1)*79.5) - 8),
                                      (int((model_predicted_state[3*idx]+1)*79.5) + 2,
                                       int((model_predicted_state[3*idx+1]+1)*79.5) + 8), (0, 0, 255), 3)
-
+                '''
                 cv2.circle(I, (int((model_predicted_state[3*idx]+1)*79.5),
                                int((model_predicted_state[3*idx+1]+1)*79.5)), 1, (255, 255, 255), -1)
+                '''
 
             print(model_predicted_state)
             print('--------------------')
@@ -426,6 +432,14 @@ class QAgent(object):
             cv2.waitKey(0)
 
         return model_prediction.reshape((1, 9, 1))
+
+
+    def update_presence(self, prediction):
+        if prediction[0, 2] > 0:
+            prediction[0, 2] = 1
+        else:
+            prediction[0, 2] = 0
+        return prediction
 
 
     def train_batch(self, loop_count):
@@ -516,13 +530,13 @@ class QAgent(object):
         '''
 
         # Train all networks
-        _, _, _, _, next_states, loss_ant, loss_ball, loss_pro, summaries, step, _, _, _ = self.session.run([self.net._train_op, self.model_ant._train_op, self.model_ball._train_op, self.model_pro._train_op, self.model_pro.next_state_batch, self.model_ant.loss, self.model_ball.loss, self.model_pro.loss, self.summaries, self.net.global_step, self.model_ant.global_step, self.model_ball.global_step, self.model_pro.global_step], feed_dict=feed)
+        _, _, _, _, next_states, loss_ant, loss_ball, loss_pro, summaries, step, _, _, _ = self.session.run([self.net._train_op, self.model_ant._train_op, self.model_ball._train_op, self.model_pro._train_op, self.model_ball.next_state_batch, self.model_ant.loss, self.model_ball.loss, self.model_pro.loss, self.summaries, self.net.global_step, self.model_ant.global_step, self.model_ball.global_step, self.model_pro.global_step], feed_dict=feed)
 
         '''
         if loop_count == 500:
             #m_batch = m_batch.reshape((self.config['batch_size'], self.config['model_state_shape'][1]))
             #print(m_batch[0:10, :])
-            print(m_targets[0:10, :, -6:, :].reshape((10, 6)))
+            #print(m_targets[0:10, :, -6:, :].reshape((10, 6)))
             print(next_states[0:10, :])
         '''
 

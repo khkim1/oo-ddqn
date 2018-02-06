@@ -89,6 +89,7 @@ object_pong_config = {
 
     'episodes': 2500,
     'episodes_validate': 100,
+    'episodes_save': 500,
     'episodes_validate_runs': 5,
     'episodes_save_interval': 25,
     'tensorboard_interval':1000,

@@ -86,7 +86,7 @@ def preprocess_atari_object(image):
         if len(coord_tuple[0]) > 0 and len(coord_tuple[1]) > 0:
             object_coord[idx*3] = scale_coord(np.mean(coord_tuple[1]))
             object_coord[idx*3+1] = scale_coord(np.mean(coord_tuple[0]))
-            object_coord[idx*3+2] = 1
+            object_coord[idx*3+2] = 1.0
 
 
 

@@ -46,8 +46,8 @@ if __name__ == '__main__':
             if episode % 200 == 0 and episode != 0:
                 agent.validate_episode(epsilon=0.05, visualise=True)
             '''
-        '''
+
         # Store every validation interval
-        if episoded% config['episodes_save_interval']==0:
+        if episode % config['episodes_save'] == 0 and episode != 0:
             saver.save(agent.session,'%s/episode_%d.ckpt'%(log_dir,episode))
-        '''
+
