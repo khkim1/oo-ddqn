@@ -8,7 +8,7 @@ LDFLAGS := -lxitari -O2 -lgflags -lglog -lopencv_core -lopencv_highgui -lopencv_
 # LDFLAGS := -lxitari -O2 -lgflags -lglog -lopencv_core -lopencv_highgui  -lmkl_rt -lboost_system -DUSE_MKL -lopencv_videoio -lopencv_photo -lopencv_imgcodecs -lopencv_video -lopencv_ml -lopencv_imgproc -lopencv_core
 # -lSDL -lSDL_gfx -lSDL_image 
 
-all: uctPlanner atariUCTPlanner 
+.PHONY all: uctPlanner atariUCTPlanner
 atariUCTPlanner: atariUCTPlanner.o uct.o atari.hpp
 	$(CXX) $(FLAGS) atariUCTPlanner.o uct.o -o atariUCTPlanner -pthread -fPIC -DNDEBUG $(LDFLAGS)
 atariUCTPlanner.o: atariUCTPlanner.cpp uct.hpp atari.hpp

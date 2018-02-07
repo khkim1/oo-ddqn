@@ -31,13 +31,6 @@ StateNode::~StateNode() {
     delete tmp;
   }
   actVect_.clear();
-
-  // int sizeNode = nodeVect_.size();
-  // for (int i = 0; i < sizeNode; ++i) {
-  //   ActionNode* tmp = nodeVect_[i];
-  //   delete tmp;
-  // }
-  // nodeVect_.clear();
 }
 
 // return whether all actions are sampled
