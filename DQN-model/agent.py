@@ -284,18 +284,6 @@ class QAgent(object):
 
         raw_frame, reward, done, info = self.env.step(action)
 
-        '''
-        action_input = np.zeros((1, 1, self.config['actions'], 1))
-        action_input[0, 0, action, 0] = 1
-        model_input = np.concatenate((state[np.newaxis].astype(np.float32), action_input.astype(np.float32)), axis=2)
-
-        # Class-wise state prediction
-        model_ant_prediction, model_ball_prediction, model_pro_prediction = self.session.run([self.model_ant.next_state, self.model_ball.next_state, self.model_pro.next_state], feed_dict={self.model_ant.x: model_input, self.model_ball.x: model_input, self.model_pro.x: model_input})
-
-        # Concatenate into a joint model state
-        model_prediction = np.concatenate((model_ant_prediction, model_ball_prediction, model_pro_prediction),
-                                          axis=1)
-        '''
 
         # Clip rewards to -1,0,1
         reward = np.sign(reward)
@@ -303,32 +291,63 @@ class QAgent(object):
         # Preprocess the output state
         new_frame = self.config['frame'](raw_frame)
 
+
         if debug:
-            cur_x = new_frame.reshape((self.config['actions'], ))
-            #model_predicted_state = model_predicted_state.reshape((self.config['actions'], ))
+
+            action_input = np.zeros((1, 1, self.config['actions'], 1))
+            action_input[0, 0, action, 0] = 1
+
+            m_state = state[np.newaxis].astype(np.float32)
+            m_state = m_state[:, :, -108:, :]
+
+            model_input = np.concatenate((m_state, action_input.astype(np.float32)), axis=2)
+
+            # Class-wise state prediction
+            model_ant_prediction, model_ball_prediction, model_pro_prediction = self.session.run([self.model_ant.next_state, self.model_ball.next_state, self.model_pro.next_state], feed_dict={self.model_ant.x: model_input, self.model_ball.x: model_input, self.model_pro.x: model_input})
+
+
+            model_ant_prediction = self.update_presence(model_ant_prediction)
+            model_pro_prediction = self.update_presence(model_pro_prediction)
+            model_ball_prediction = self.update_presence(model_ball_prediction)
+
+            # Concatenate into a joint model state
+            model_prediction = np.concatenate((model_ant_prediction, model_ball_prediction, model_pro_prediction), axis=1)
+
+            cur_x = new_frame.reshape((self.config['actions']+3, ))
+            model_predicted_state = model_prediction.reshape((9, ))
 
             I = preprocess_atari_crop(raw_frame)
 
             for idx in range(3):
-                cv2.circle(I, (int((cur_x[2*idx]+1)*79.5),
-                               int((cur_x[2*idx+1]+1)*79.5)), 1, (255, 0, 0), -1)
-                '''
-                cv2.circle(I, (int((model_predicted_state[2*idx]+1)*79.5),
-                               int((model_predicted_state[2*idx+1]+1)*79.5)), 1, (0, 255, 0), -1)
-                '''
-                '''
-                elif idx == 1:
-                    cv2.circle(I, (int(cur_x[2 * idx]), int(cur_x[2 * idx + 1])),
-                                1, (255, 0, 0), -1)
 
-                else:
-                    cv2.circle(I, (int(cur_x[2 * idx]), int(cur_x[2 * idx + 1])),
-                                1, (255, 0, 0), -1)
-                '''
+                # Display opponent paddle in Blue (opencv is BGR format)
+                if idx == 0 and model_predicted_state[3*idx+2] == 1:
+                    cv2.rectangle(I, (np.round((model_predicted_state[3*idx]+1)*79.5).astype(int) - 2,
+                                      np.round((model_predicted_state[3*idx+1]+1)*79.5).astype(int) - 8),
+                                     (np.round((model_predicted_state[3*idx]+1)*79.5).astype(int) + 2,
+                                      np.round((model_predicted_state[3*idx+1]+1)*79.5).astype(int) + 8), (255, 0, 0), 3)
+
+                # Display ball in Green
+                elif idx == 1 and model_predicted_state[3*idx+2] == 1:
+                    cv2.rectangle(I, (np.round((model_predicted_state[3*idx]+1)*79.5).astype(int) - 1,
+                                      np.round((model_predicted_state[3*idx+1]+1)*79.5).astype(int) - 2),
+                                     (np.round((model_predicted_state[3*idx]+1)*79.5).astype(int) + 1,
+                                      np.round((model_predicted_state[3*idx+1]+1)*79.5).astype(int) + 2), (0, 255, 0), 3)
+
+                # Display your paddle in Red
+                elif idx == 2 and model_predicted_state[3*idx+2] == 1:
+                    cv2.rectangle(I, (np.round((model_predicted_state[3*idx]+1)*79.5).astype(int) - 2,
+                                      np.round((model_predicted_state[3*idx+1]+1)*79.5).astype(int) - 8),
+                                     (np.round((model_predicted_state[3*idx]+1)*79.5).astype(int) + 2,
+                                      np.round((model_predicted_state[3*idx+1]+1)*79.5).astype(int) + 8), (0, 0, 255), 3)
+
+                cv2.circle(I, (np.round((cur_x[3*idx]+1)*79.5).astype(int),
+                               np.round((cur_x[3*idx+1]+1)*79.5).astype(int)), 1, (255, 255, 255), -1)
 
             print(cur_x)
-            #print(model_predicted_state)
+            print(model_predicted_state)
             print('--------------------')
+            I = cv2.resize(I, None, fx=2, fy=2, interpolation=cv2.INTER_LINEAR)
             cv2.imshow('Image', I)
             cv2.waitKey(0)
 
@@ -381,7 +400,7 @@ class QAgent(object):
         action_input[0, 0, action, 0] = 1
 
         state = state[np.newaxis].astype(np.float32)
-        state = state[:, :, -18:, :]
+        state = state[:, :, -108:, :]
 
         model_input = np.concatenate((state, action_input.astype(np.float32)), axis=2)
 
@@ -436,7 +455,11 @@ class QAgent(object):
             cv2.imshow('Image', I)
             cv2.waitKey(0)
 
-        return model_prediction.reshape((1, 9, 1))
+        model_prediction = model_prediction.reshape((1, 9, 1))
+
+        #model_prediction = np.round((model_prediction + 1)*79.5) / 79.5 - 1.0
+
+        return model_prediction
 
 
     def update_presence(self, prediction):
@@ -499,7 +522,7 @@ class QAgent(object):
 
         # State batch = same for all models
         xp_states = xp_states.astype(np.float32)
-        m_batch = np.concatenate((xp_states[:, :, -18:, :], action_input.astype(np.float32)), axis=2)
+        m_batch = np.concatenate((xp_states[:, :, -108:, :], action_input.astype(np.float32)), axis=2)
 
         # Joint next state batch
         m_targets = xp_next.astype(np.float32)

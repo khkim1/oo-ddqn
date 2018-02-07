@@ -84,7 +84,7 @@ class DQN(object):
     def _create_train_ops(self, optimiser):
         if optimiser is None:
             # 0.001 for object
-            optimiser = tf.train.RMSPropOptimizer(learning_rate=0.0025, momentum=0.95, epsilon=0.01)
+            optimiser = tf.train.RMSPropOptimizer(learning_rate=0.001, momentum=0.95, epsilon=0.01)
             #optimiser = tf.train.AdamOptimizer(learning_rate=0.0001)
         grads_and_vars = optimiser.compute_gradients(self.loss, var_list=[v for v in tf.trainable_variables() if v.name.startswith('Q_network/')])
         train_op = optimiser.apply_gradients(grads_and_vars=grads_and_vars, global_step=self.global_step)
@@ -191,7 +191,7 @@ class Model(object):
     def _create_losses(self):
         #diff = tf.reduce_sum(tf.subtract(self.next_state_batch, self.m_targets), axis=1)
         diff = tf.subtract(self.next_state_batch[:, 0:2], self.m_targets[:, 0:2])
-        loss = tf.reduce_mean(tf.multiply(self.m_targets[:, 2], tf.reduce_mean(self._squared_loss(diff), axis=1)))
+        loss = tf.reduce_mean(tf.multiply(self.m_targets[:, 2], tf.reduce_mean(tf.abs(diff), axis=1)))
         #loss = tf.losses.mean_squared_error(self.m_targets[:, 0:2], self.next_state_batch[:, 0:2])
         h_loss = tf.square(tf.losses.hinge_loss(self.m_targets[:, 2], self.next_state_batch[:, 2]))
         regulariser = self.regul_param * sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
@@ -201,7 +201,7 @@ class Model(object):
         if optimiser is None:
             # 0.001 for object
             #optimiser = tf.train.RMSPropOptimizer(learning_rate=0.0025, momentum=0.95, epsilon=0.01)
-            optimiser = tf.train.AdamOptimizer(learning_rate=0.001)
+            optimiser = tf.train.AdamOptimizer(learning_rate=0.0001)
         grads_and_vars = optimiser.compute_gradients(self.loss, var_list=[v for v in tf.trainable_variables() if v.name.startswith(name+'/')])
         train_op = optimiser.apply_gradients(grads_and_vars=grads_and_vars, global_step=self.global_step)
         return train_op
@@ -209,11 +209,10 @@ class Model(object):
     def _create_outputs(self, x):
         x = tf.reshape(x, shape=[x.get_shape().as_list()[0], -1], name='flatten_model')
 
-        x = tf.layers.dense(x, units=64, activation=tf.nn.relu, name='fc1_model',
+        x = tf.layers.dense(x, units=512, activation=tf.nn.relu, name='fc1_model',
                             kernel_initializer=tf.contrib.layers.xavier_initializer(),
                             bias_initializer=tf.contrib.layers.xavier_initializer())
 
-        '''
         x = tf.layers.dense(x, units=512, activation=tf.nn.relu, name='fc2_model',
                             kernel_initializer=tf.contrib.layers.xavier_initializer(),
                             bias_initializer=tf.contrib.layers.xavier_initializer())
@@ -233,8 +232,6 @@ class Model(object):
         x = tf.layers.dense(x, units=256, activation=tf.nn.relu, name='fc6_model',
                             kernel_initializer=tf.contrib.layers.xavier_initializer(),
                             bias_initializer=tf.contrib.layers.xavier_initializer())
-
-        '''
 
         x = tf.layers.dense(x, units=self.output_state_shape, activation=tf.tanh, name='next_state')
 
