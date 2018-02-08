@@ -1,0 +1,1 @@
+/opt/cuda/include/thrust/detail/config/global_workarounds.h

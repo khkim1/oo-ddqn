@@ -1,0 +1,1 @@
+/opt/cuda/include/thrust/detail/static_assert.h

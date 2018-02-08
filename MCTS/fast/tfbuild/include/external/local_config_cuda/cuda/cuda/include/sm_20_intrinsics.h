@@ -1,0 +1,1 @@
+/opt/cuda/include/sm_20_intrinsics.h
