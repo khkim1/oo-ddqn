@@ -1,3 +1,4 @@
+// #include "tensorflow/cc/client/client_session.h"
 #include "tensorflow/cc/ops/const_op.h"
 #include "tensorflow/core/protobuf/meta_graph.pb.h"
 #include "tensorflow/core/public/session.h"
@@ -9,6 +10,7 @@ int main() {
   const string pathToGraph = "../test_model/test_model.meta";
   const string checkpointPath = "../test_model/test_model";
 
+  // std::unique_ptr<Session> session(NewSession(SessionOptions()));
   auto session = NewSession(SessionOptions());
   if (session == nullptr) {
     throw runtime_error("Could not create Tensorflow session.");
@@ -46,17 +48,26 @@ int main() {
   // auto x_val = ops::Const(root_scope, { {1.f, 3.f, 5.f} });
   // ClientSession::FeedType feed;
   // feed.insert({"ph_x", x_val});
-  // vector<string> outputOps = {"pred", "wb:0"};
-  // vector<Tensor> results;
-  //
-  // status = session->Run(feedDict, outputOps, {}, &results);
-  // if (!status.ok()) {
-  //   throw runtime_error("Session run failed");
-  // }
-  //
-  // for (int i = 0; i < results.size(); ++i) {
-  //   cout << results[i].DebugString() << endl;
-  // }
+
+  Tensor x_val(DT_FLOAT, TensorShape({3}));
+  x_val.vec<float>()(0) = 1.0f;
+  x_val.vec<float>()(1) = 2.0f;
+  x_val.vec<float>()(2) = 3.0f;
+  const vector<pair<string, Tensor>> feed = { {"ph_x", x_val} };
+  vector<string> outputOps = {"pred", "wb:0"};
+  vector<Tensor> results;
+  status = session->Run(feed, outputOps, {}, &results);
+  if (!status.ok()) {
+    throw runtime_error("Session Run() failed");
+  }
+
+  cout << "session->Run() returned " << results.size() << " items." << endl;
+
+  for (int i = 0; i < results.size(); ++i) {
+    cout << results[i].DebugString() << endl;
+  }
+  
+  session->Close();
 
   return 0;
 }
