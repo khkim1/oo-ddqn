@@ -2,8 +2,6 @@
 #define __ATARI_IMAGES_HPP__
 
 #include <ale_interface.hpp>
-// #include "caffe/caffe.hpp"
-// #include "caffe/util/upgrade_proto.hpp"
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/core.hpp>
@@ -12,7 +10,6 @@
 #include <string>
 using namespace cv;
 using namespace ale;
-// using namespace caffe;
 
 const uint32_t kImgHeight = 210;
 const uint32_t kImgWidth = 160;
