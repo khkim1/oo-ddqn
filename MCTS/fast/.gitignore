@@ -4,3 +4,6 @@ atariUCTPlanner.o
 uct.o
 uctPlanner
 uctPlanner.o
+
+# Don't upload large library files
+libtensorflow_cc.so
