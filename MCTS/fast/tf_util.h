@@ -27,7 +27,7 @@ class TFModel {
     //            vector<Tensor>* outputs);
 
     Status Run(const vector<float>& input,
-               const string& output_name,
+               const string& outputName,
                Tensor* output);
 
     std::unique_ptr<Session> session_;

@@ -11,35 +11,35 @@ using namespace tensorflow;
 
 class ObjectState: public State {
   public:
-    ObjectState(const std::vector<float>& obj_vec) {
-      obj_vec_ = obj_vec;
+    ObjectState(const std::vector<float>& objVec) {
+      objVec_ = objVec;
     }
 
     virtual bool equal(State* state) {
       const ObjectState* other = dynamic_cast<const ObjectState*>(state);
-      if ((other == NULL) || (obj_vec_ != other->obj_vec_)) {
+      if ((other == NULL) || (objVec_ != other->objVec_)) {
         return false;
       }
       return true;
     }
 
     virtual State* duplicate() {
-      return new ObjectState(obj_vec_);
+      return new ObjectState(objVec_);
     }
 
     virtual void print() const {
       std::cout << "[";
-      for (int i = 0; i < obj_vec_.size(); ++i) {
+      for (int i = 0; i < objVec_.size(); ++i) {
         if (i > 0)
           std::cout << ", ";
-        std::cout << obj_vec_[i];
+        std::cout << objVec_[i];
       }
       std::cout << "]";
     }
           
     ~ObjectState() {}
 
-    std::vector<float> obj_vec_;
+    std::vector<float> objVec_;
 };
 
 
@@ -102,14 +102,14 @@ class ObjectSimulator : public Simulator {
     // TODO
     // FrameBuffer* frameBuffer_;
 
-    ObjectState* initial_state_;
-    ObjectState* current_state_;
-    vector<SimAction*> action_set_;
+    ObjectState* initialState_;
+    ObjectState* currentState_;
+    vector<SimAction*> actionSet_;
     TFModel model_;
 
 	  ObjectSimulator (const string& model_prefix, bool updateFrame,
                   bool pseudoGameover, bool scaleReward, int numRepeats,
-                  const vector<float>& initial_state_vec,
+                  const vector<float>& initialState_vec,
                   int num_actions):
 		updateFrame_(updateFrame),
 		pseudoGameover_(pseudoGameover), 
@@ -118,11 +118,11 @@ class ObjectSimulator : public Simulator {
     model_(model_prefix),
 		reward_(0) {
 
-    initial_state_ = new ObjectState(initial_state_vec),
-		current_state_ = new ObjectState(initial_state_vec);
+    initialState_ = new ObjectState(initialState_vec),
+		currentState_ = new ObjectState(initialState_vec);
     for (int i = 0; i < num_actions; ++i) {
       // TODO: PONG
-      action_set_.push_back(new ObjectAction(i));
+      actionSet_.push_back(new ObjectAction(i));
     }
 		lifeLost_ = false;
 
@@ -130,15 +130,15 @@ class ObjectSimulator : public Simulator {
 		     << "\nModel prefix: " << model_.model_prefix_
 		     << "\nPseudo GameOver: " << (pseudoGameover_ ? "True" : "False")
 		     << "\nScale Reward: " << (scaleReward_ ? "True" : "False" )
-		     << "\nNum actions: " << action_set_.size() << "\n"
+		     << "\nNum actions: " << actionSet_.size() << "\n"
          << "\nInitial state: ";
-    initial_state_->print();
+    initialState_->print();
 		cout << endl;
 	}
 
 	~ObjectSimulator () {
-		delete current_state_;
-    delete initial_state_;
+		delete currentState_;
+    delete initialState_;
 	}
 
   // TODO: Needed?
@@ -149,20 +149,20 @@ class ObjectSimulator : public Simulator {
 
 	virtual void setState(State* state) {
 		const ObjectState* other = dynamic_cast<const ObjectState*> (state);
-    current_state_->obj_vec_ = other->obj_vec_;
+    currentState_->objVec_ = other->objVec_;
 		lifeLost_ = false;
 	}
 
 	virtual State* getState() {
-		return current_state_;
+		return currentState_;
 	}
 
 	SimAction* getRandomAct() {
-		return action_set_[rand() % action_set_.size()];
+		return actionSet_[rand() % actionSet_.size()];
 	}
 
 	virtual vector<SimAction*>& getActions() {
-		return action_set_;
+		return actionSet_;
 	}
 
   // TODO: How do we check for terminal condition?
@@ -172,10 +172,10 @@ class ObjectSimulator : public Simulator {
 	}
 
 	virtual void reset() {
-    if (current_state_ != nullptr) {
-      delete current_state_;
+    if (currentState_ != nullptr) {
+      delete currentState_;
     }
-		current_state_ = dynamic_cast<ObjectState*>(initial_state_->duplicate());
+		currentState_ = dynamic_cast<ObjectState*>(initialState_->duplicate());
 		lifeLost_ = false;
 	}
 
@@ -189,9 +189,9 @@ class ObjectSimulator : public Simulator {
 		for (int i = 0; i < numRepeats_; ++i) {
       Tensor out;
       // XXX: Call model -- pred = ?
-      if (model_.Run(current_state_->obj_vec_, "pred", &out).ok()) {
-        for (int j = 0; j < current_state_->obj_vec_.size(); ++j) {
-          current_state_->obj_vec_[j] = out.vec<float>()(j);
+      if (model_.Run(currentState_->objVec_, "pred", &out).ok()) {
+        for (int j = 0; j < currentState_->objVec_.size(); ++j) {
+          currentState_->objVec_[j] = out.vec<float>()(j);
         }
       }
       // XXX: How to get reward?
@@ -220,8 +220,8 @@ class ObjectSimulator : public Simulator {
 	// solution: fix life counter in xitari
 	// currently fixed: MsPacMan
 	virtual bool actDiffer() {
-		std::vector<float> current_obj_vec = current_state_->obj_vec_;
-		std::vector<float> prev_obj_vec;
+		std::vector<float> currentObjVec = currentState_->objVec_;
+		std::vector<float> prevObjVec;
     return false;
     
     // XXX

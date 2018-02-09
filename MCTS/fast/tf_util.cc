@@ -56,7 +56,7 @@ TFModel::~TFModel() {
 }
 
 Status TFModel::Run(const vector<float>& input,
-                    const string& output_name,
+                    const string& outputName,
                     Tensor* output) {
   Status status;
   int size = input.size();
@@ -67,7 +67,7 @@ Status TFModel::Run(const vector<float>& input,
   // TODO: placeholder names?
   const vector<pair<string, Tensor>> inputs = { {"ph_x", val} };
   vector<Tensor> outputs;
-  status = session_->Run(inputs, {output_name}, {}, &outputs);
+  status = session_->Run(inputs, {outputName}, {}, &outputs);
   if (status.ok() && outputs.size() == 1) {
     *output = outputs[0];
   }
