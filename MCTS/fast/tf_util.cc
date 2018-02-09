@@ -11,10 +11,11 @@ using namespace tensorflow;
 // specified by the path prefix.
 
 TFModel::TFModel(const string& path_prefix) {
+  model_prefix_ = path_prefix;
   const string meta_graph_path = path_prefix + ".meta";
 
-  std::unique_ptr<Session> session(NewSession(SessionOptions()));
-  if (session == nullptr) {
+  session_.reset(NewSession(SessionOptions()));
+  if (session_ == nullptr) {
     throw runtime_error("Could not create Tensorflow session.");
   }
 
@@ -29,7 +30,7 @@ TFModel::TFModel(const string& path_prefix) {
   }
 
   // Add the graph to the session
-  status = session->Create(graph_def.graph_def());
+  status = session_->Create(graph_def.graph_def());
   if (!status.ok()) {
       throw runtime_error("Error creating graph: " + status.ToString());
   }
@@ -37,7 +38,7 @@ TFModel::TFModel(const string& path_prefix) {
   // Read weights from the checkpoint
   Tensor path_tensor(DT_STRING, TensorShape());
   path_tensor.scalar<std::string>()() = path_prefix;
-  status = session->Run({
+  status = session_->Run({
       {graph_def.saver_def().filename_tensor_name(), path_tensor}},
       {}, {graph_def.saver_def().restore_op_name()}, nullptr);
   if (!status.ok()) {
@@ -46,22 +47,31 @@ TFModel::TFModel(const string& path_prefix) {
   }
 }
 
-
-Status Run(const vector<pair<string, Tensor> >& inputs,
-           const vector<string>& output_tensor_names,
-           const vector<string>& target_node_names,
-           vector<Tensor>* outputs) {
-  status = session->Run(inputs, output_tensor_names, target_node_names,
-                        &outputs);
-  return status;
-}
-
 TFModel::~TFModel() {
   // Release session.
-  if (!session->Close().ok()) {
+  if (!session_->Close().ok()) {
     cout << "Couldn't close session properly.";
   }
-  session.reset();
+  session_.reset();
+}
+
+Status TFModel::Run(const vector<float>& input,
+                    const string& output_name,
+                    Tensor* output) {
+  Status status;
+  int size = input.size();
+  Tensor val(DT_FLOAT, TensorShape({size}));
+  for (int i = 0; i < size; ++i) {
+    val.vec<float>()(i) = input[i];
+  }
+  // TODO: placeholder names?
+  const vector<pair<string, Tensor>> inputs = { {"ph_x", val} };
+  vector<Tensor> outputs;
+  status = session_->Run(inputs, {output_name}, {}, &outputs);
+  if (status.ok() && outputs.size() == 1) {
+    *output = outputs[0];
+  }
+  return status;
 }
 
 

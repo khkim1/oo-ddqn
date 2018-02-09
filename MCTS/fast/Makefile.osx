@@ -3,6 +3,8 @@ XITARI_ROOT := xitari/osx
 TF_ROOT := tfmac
 FLAGS := -I$(XITARI_ROOT)/include/xitari -L$(XITARI_ROOT)/lib -L/usr/local/lib
 LDFLAGS := -lxitari -O2 -lgflags -lglog -lopencv_core -lopencv_highgui -lopencv_videoio -lopencv_photo -lopencv_imgcodecs -lopencv_video -lopencv_ml -lopencv_imgproc -lopencv_core
+TF_FLAGS := -Wl,-rpath,'$ORIGIN/lib' -I$(TF_ROOT)/include -L$(TF_ROOT)/lib 
+TF_LDFLAGS := -ltensorflow_cc -ltensorflow_framework
 
 .PHONY all: uctPlanner atariUCTPlanner
 atariUCTPlanner: atariUCTPlanner.o uct.o tf_util.o atari.hpp
@@ -16,11 +18,18 @@ uct.o:	uct.cpp	uct.hpp
 uctPlanner.o:	uctPlanner.cpp  uct.hpp
 	$(CXX)  uctPlanner.cpp -c -o uctPlanner.o
 
-model_test: tf_util.o model_test.cc
-	$(CXX) -c -Wl,-rpath,'$ORIGIN/lib' -I$(TF_ROOT)/include -L$(TF_ROOT)/lib model_test.cc -ltensorflow_cc -ltensorflow_framework -o model_test
+
+obj_sim.o: tf_util.o obj_sim.h
+	$(CXX) $(FLAGS) $(TF_FLAGS) -c obj_sim.h -o obj_sim.o
+
+model_test: tf_util.o model_test.o
+	$(CXX) $(TF_FLAGS) tf_util.o model_test.o -o model_test $(TF_LDFLAGS)
+
+model_test.o: tf_util.o model_test.cc
+	$(CXX) $(TF_FLAGS) -c model_test.cc -o model_test.o
 
 tf_util.o: tf_util.cc tf_util.h
-	$(CXX) -c -Wl,-rpath,'$ORIGIN/lib' -I$(TF_ROOT)/include -L$(TF_ROOT)/lib tf_util.cc -ltensorflow_cc -ltensorflow_framework -o tf_util.o
+	$(CXX) $(TF_FLAGS) -c tf_util.cc -o tf_util.o
 
 clean:
-	rm -f tf_util uctPlanner uctPlanner.o uct.o atariUCTPlanner atariUCTPlanner.o
+	rm -f model_test.o model_test tf_util.o tf_util uctPlanner uctPlanner.o uct.o atariUCTPlanner atariUCTPlanner.o
