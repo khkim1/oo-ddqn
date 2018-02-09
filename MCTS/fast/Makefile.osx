@@ -1,8 +1,8 @@
 # This will likely need to be changed to suit your installation.
 CXX := clang++ -std=c++11
-ALE_LIB := xitari/osx/lib
-ALE_INCLUDE := xitari/osx/include/xitari
-FLAGS := -I$(ALE_INCLUDE) -L$(ALE_LIB) -L/usr/local/lib
+XITARI_ROOT := xitari/osx
+TF_ROOT := tfmac
+FLAGS := -I$(XITAR_ROOT)/include/xitari -L$(XITARI_ROOT)/lib -L/usr/local/lib
 LDFLAGS := -lxitari -O2 -lgflags -lglog -lopencv_core -lopencv_highgui -lopencv_videoio -lopencv_photo -lopencv_imgcodecs -lopencv_video -lopencv_ml -lopencv_imgproc -lopencv_core
 
 .PHONY all: uctPlanner atariUCTPlanner
@@ -17,5 +17,8 @@ uct.o:	uct.cpp	uct.hpp
 uctPlanner.o:	uctPlanner.cpp  uct.hpp
 	$(CXX)  uctPlanner.cpp -c -o uctPlanner.o
 
+.PHONY tf_util: tf_util.cpp
+	$(CXX) -Wl,-rpath,'$ORIGIN/lib' -I$(TF_ROOT)/include -L$(TF_ROOT)/lib  tf_util.cpp -ltensorflow_cc -ltensorflow_framework -o tf_util
+
 clean:
-	rm -f uctPlanner uctPlanner.o uct.o atariUCTPlanner atariUCTPlanner.o
+	rm -f tf_util uctPlanner uctPlanner.o uct.o atariUCTPlanner atariUCTPlanner.o
