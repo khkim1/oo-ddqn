@@ -8,6 +8,8 @@
 using namespace std;
 using namespace tensorflow;
 
+void AppendOnehotAction(vector<float>* v, int chosen, int num_actions);
+
 class TFModel {
   public:
     TFModel() = delete;
@@ -21,17 +23,24 @@ class TFModel {
     // TODO
     // Status Load(const string&);
 
-    // Status Run(const vector<pair<string, Tensor> >& inputs,
-    //            const vector<string>& output_tensor_names,
-    //            const vector<string>& target_node_names,
-    //            vector<Tensor>* outputs);
+    void RunVector(const vector<float>& input,
+                   const string& placeholderName,
+                   const string& outputName,
+                   Tensor* output);
 
-    Status Run(const vector<float>& input,
-               const string& outputName,
-               Tensor* output);
+    void RunMatrix(const vector<float>& input,
+                   const TensorShape& shape,
+                   const string& placeholderName,
+                   const string& outputName,
+                   Tensor* output);
 
     std::unique_ptr<Session> session_;
     std::string model_prefix_;
+
+  private:
+    void RunHelper(const vector<pair<string, Tensor>>&, 
+                   const string& outputName,
+                   Tensor* output);
 };
 
 #endif

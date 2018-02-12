@@ -7,6 +7,18 @@
 using namespace std;
 using namespace tensorflow;
 
+// `chosen` is 0-based
+void AppendOnehotAction(vector<float>* v, int chosen, int num_actions) {
+  for (int i = 0; i < num_actions; i++) {
+    if (i == chosen) {
+      v->push_back(1.);
+    }
+    else{
+      v->push_back(0.);
+    }
+  }
+}
+
 // Returns the session containing the loaded graph and weights for the model
 // specified by the path prefix.
 
@@ -55,37 +67,57 @@ TFModel::~TFModel() {
   session_.reset();
 }
 
-Status TFModel::Run(const vector<float>& input,
-                    const string& outputName,
-                    Tensor* output) {
+void TFModel::RunHelper(const vector<pair<string, Tensor>>& feed, 
+                        const string& outputName,
+                        Tensor* output) {
   Status status;
+  vector<Tensor> outputs;
+  status = session_->Run(feed, {outputName}, {}, &outputs);
+  if (status.ok() && outputs.size() == 1) {
+    *output = outputs[0];
+  }
+  else {
+    cout << "Error: " << status.ToString() << endl;
+    throw runtime_error("Error: " + status.ToString());
+  }
+}
+
+
+void TFModel::RunVector(const vector<float>& input,
+                        const string& placeholderName,
+                        const string& outputName,
+                        Tensor* output) {
   int size = input.size();
   Tensor val(DT_FLOAT, TensorShape({size}));
   for (int i = 0; i < size; ++i) {
     val.vec<float>()(i) = input[i];
   }
-  // TODO: placeholder names?
-  const vector<pair<string, Tensor>> inputs = { {"ph_x", val} };
-  vector<Tensor> outputs;
-  status = session_->Run(inputs, {outputName}, {}, &outputs);
-  if (status.ok() && outputs.size() == 1) {
-    *output = outputs[0];
-  }
-  return status;
+  const vector<pair<string, Tensor>> feed = {
+    { placeholderName, val }
+  };
+
+  RunHelper(feed, outputName, output);
 }
 
-
-/*
-  Tensor x_val(DT_FLOAT, TensorShape({3}));
-  x_val.vec<float>()(0) = 1.0f;
-  x_val.vec<float>()(1) = 2.0f;
-  x_val.vec<float>()(2) = 3.0f;
-  const vector<pair<string, Tensor>> feed = { {"ph_x", x_val} };
-  vector<string> outputOps = {"pred", "wb:0"};
-  vector<Tensor> results;
-  status = sess->Run(feed, outputOps, {}, &results);
-  for (int i = 0; i < results.size(); ++i) {
-    cout << results[i].DebugString() << endl;
+void TFModel::RunMatrix(const vector<float>& input,
+                          const TensorShape& shape,
+                          const string& placeholderName,
+                          const string& outputName,
+                          Tensor* output) {
+  const int d0 = shape.dim_size(0);
+  const int d1 = shape.dim_size(1);
+  
+  Tensor val(DT_FLOAT, shape);
+  for (int i = 0; i < d0; ++i) {
+    for (int j = 0; j < d1; ++j) {
+      val.matrix<float>()(i, j) = input[i*d1 + j];
+    }
   }
-*/
+  // TODO: placeholder names?
+  const vector<pair<string, Tensor>> feed = {
+    { placeholderName, val }
+  };
+
+  RunHelper(feed, outputName, output);
+}
 

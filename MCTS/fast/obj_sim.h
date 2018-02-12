@@ -1,45 +1,56 @@
-#ifndef __MODEL_SIM_HPP__
-#define __MODEL_SIM_HPP__
+#ifndef __OBJ_SIM_H__
+#define __OBJ_SIM_H__
 
-#include "uct.hpp"
+#include "mcts.h"
 #include <string>
-#include "atari_images.hpp"
 #include "tf_util.h"
+#include "constants.h"
 
 using namespace std;
 using namespace tensorflow;
 
 class ObjectState: public State {
   public:
-    ObjectState(const std::vector<float>& objVec) {
-      objVec_ = objVec;
+    ObjectState(const Vec& objState) {
+      objState_ = objState;
+      // TODO: Hardcoded for Pong
+      assert(objState_.size() == 9);
+    }
+
+    ObjectState(const float* objState, int size) {
+      objState_.clear();
+      for (int i = 0; i < size; i++) {
+        objState_.push_back(objState[i]);
+      }
+      // TODO: Hardcoded for Pong
+      assert(objState_.size() == 9);
     }
 
     virtual bool equal(State* state) {
       const ObjectState* other = dynamic_cast<const ObjectState*>(state);
-      if ((other == NULL) || (objVec_ != other->objVec_)) {
+      if ((other == NULL) || (objState_ != other->objState_)) {
         return false;
       }
       return true;
     }
 
     virtual State* duplicate() {
-      return new ObjectState(objVec_);
+      return new ObjectState(objState_);
     }
 
     virtual void print() const {
       std::cout << "[";
-      for (int i = 0; i < objVec_.size(); ++i) {
+      for (int i = 0; i < objState_.size(); ++i) {
         if (i > 0)
           std::cout << ", ";
-        std::cout << objVec_[i];
+        std::cout << objState_[i];
       }
       std::cout << "]";
     }
           
     ~ObjectState() {}
 
-    std::vector<float> objVec_;
+    Vec objState_;
 };
 
 
@@ -67,21 +78,6 @@ class ObjectAction: public SimAction {
 
 class ObjectSimulator : public Simulator {
   public:
-    // // set the state of simulator
-    // virtual void setState(State* state) = 0;
-    // // get current state of simulator, no state is created
-    // virtual State* getState() = 0;
-    // // one step simulation
-    // virtual double act(const SimAction* action) = 0;
-    // // get all available actions for current state
-    // // need to handle memory of actions
-    // virtual vector<SimAction*>& getActions() = 0;
-    // // return whether current state is terminal state
-    // virtual bool isTerminal() = 0;
-    // // reset the state of the simulator
-    // virtual void reset() = 0;
-
-
     double minReward_;
     double maxReward_;
     // true if just losing one life
@@ -89,56 +85,70 @@ class ObjectSimulator : public Simulator {
     //
     double reward_;
 
+    bool isTerminal_;
 
     // Control the condition of terminal states:
     // true then lost live will terminate.
-    const bool pseudoGameover_;
+    // const bool pseudoGameover_;
+
     // number of action repeats
     const int numRepeats_;
     const bool scaleReward_;
 
-    // true then update frameBuffer_
-    bool updateFrame_;
     // TODO
+    // true then update frameBuffer_
+    // bool updateFrame_;
     // FrameBuffer* frameBuffer_;
 
-    ObjectState* initialState_;
+    Vec history_;
     ObjectState* currentState_;
     vector<SimAction*> actionSet_;
-    TFModel model_;
+    string stateModelPrefix_;
+    string rewardModelPrefix_;
+    std::unique_ptr<TFModel> stateModel_;
+    std::unique_ptr<TFModel> rewardModel_;
 
-	  ObjectSimulator (const string& model_prefix, bool updateFrame,
-                  bool pseudoGameover, bool scaleReward, int numRepeats,
-                  const vector<float>& initialState_vec,
-                  int num_actions):
-		updateFrame_(updateFrame),
-		pseudoGameover_(pseudoGameover), 
+	  ObjectSimulator(const string& stateModelPrefix,
+                    const string& rewardModelPrefix,
+                    bool scaleReward,
+                    int numRepeats,
+                    int num_actions
+                    // bool updateFrame,
+                    // bool pseudoGameover, 
+                    ):
+    stateModelPrefix_(stateModelPrefix),
+    rewardModelPrefix_(rewardModelPrefix),
 		scaleReward_(scaleReward), 
 		numRepeats_(numRepeats), 
-    model_(model_prefix),
+		// updateFrame_(updateFrame),
+		// pseudoGameover_(pseudoGameover), 
 		reward_(0) {
 
-    initialState_ = new ObjectState(initialState_vec),
-		currentState_ = new ObjectState(initialState_vec);
+    cout << "[dqn] LOADING STATE MODEL" << endl;
+    stateModel_.reset(new TFModel(stateModelPrefix_));
+    cout << "[dqn] LOADING REWARD MODEL" << endl;
+    rewardModel_.reset(new TFModel(rewardModelPrefix_));
+    cout << "[dqn] SETTING CURRENT STATE" << endl;
+		currentState_ = new ObjectState(
+        kResetState, sizeof(kResetState) / sizeof(kResetState[0]));
+    cout << "[dqn] SETTING ACTION SET" << endl;
     for (int i = 0; i < num_actions; ++i) {
-      // TODO: PONG
       actionSet_.push_back(new ObjectAction(i));
     }
 		lifeLost_ = false;
+    isTerminal_ = false;
 
 		cout << "Simulator Information: "
-		     << "\nModel prefix: " << model_.model_prefix_
-		     << "\nPseudo GameOver: " << (pseudoGameover_ ? "True" : "False")
+		     << "\nState model: " << stateModelPrefix_
+		     << "\nReward model: " << rewardModelPrefix_
 		     << "\nScale Reward: " << (scaleReward_ ? "True" : "False" )
 		     << "\nNum actions: " << actionSet_.size() << "\n"
-         << "\nInitial state: ";
-    initialState_->print();
-		cout << endl;
+		     // << "\nPseudo GameOver: " << (pseudoGameover_ ? "True" : "False")
+		     << endl;
 	}
 
 	~ObjectSimulator () {
 		delete currentState_;
-    delete initialState_;
 	}
 
   // TODO: Needed?
@@ -149,9 +159,19 @@ class ObjectSimulator : public Simulator {
 
 	virtual void setState(State* state) {
 		const ObjectState* other = dynamic_cast<const ObjectState*> (state);
-    currentState_->objVec_ = other->objVec_;
+    currentState_->objState_ = other->objState_;
 		lifeLost_ = false;
 	}
+
+  virtual void setHistory(vector<State*> history) {
+    history_.clear();
+    for (const State* state : history) {
+      const ObjectState* _state = dynamic_cast<const ObjectState*> (state);
+      for (int i = 0; i < _state->objState_.size(); ++i) {
+        history_.push_back(_state->objState_[i]);
+      }
+    }
+  }
 
 	virtual State* getState() {
 		return currentState_;
@@ -165,37 +185,113 @@ class ObjectSimulator : public Simulator {
 		return actionSet_;
 	}
 
-  // TODO: How do we check for terminal condition?
+  // TODO: How do we check for terminal condition for non-Pong games?
 	virtual bool isTerminal() {
 		// return ale_->gameOver() || ( pseudoGameover_ && lifeLost_);
-    return false;
+    return isTerminal_;
 	}
 
 	virtual void reset() {
     if (currentState_ != nullptr) {
       delete currentState_;
     }
-		currentState_ = dynamic_cast<ObjectState*>(initialState_->duplicate());
+		currentState_ = new ObjectState(
+        kResetState, sizeof(kResetState) / sizeof(kResetState[0]));
 		lifeLost_ = false;
+    isTerminal_ = false;
 	}
+
+
+  // TODO: The following prediction logic is hardcoded for Pong!!
+  Vec predictState(const Vec& input) {
+    Tensor out;
+    Vec nextState(9);
+
+    // Get next Ant paddle state
+    stateModel_->RunVector(input, kInputPlaceholderAnt,
+                           kNextStateTensorAnt, &out);
+    nextState[0] = out.matrix<float>()(0, 0);
+    nextState[1] = out.matrix<float>()(0, 1);
+    nextState[2] = out.matrix<float>()(0, 2);
+
+    // Get next ball state
+    stateModel_->RunVector(input, kInputPlaceholderBall,
+                           kNextStateTensorBall, &out);
+    nextState[3] = out.matrix<float>()(0, 0);
+    nextState[4] = out.matrix<float>()(0, 1);
+    nextState[5] = out.matrix<float>()(0, 2);
+
+    // Get next Pro paddle state
+    stateModel_->RunVector(input, kInputPlaceholderPro,
+                           kNextStateTensorPro, &out);
+    nextState[6] = out.matrix<float>()(0, 0);
+    nextState[7] = out.matrix<float>()(0, 1);
+    nextState[8] = out.matrix<float>()(0, 2);
+
+    return nextState;
+  }
+
+  float predictReward(const vector<float>& stateVec) {
+    Tensor out;
+    rewardModel_->RunMatrix(stateVec, TensorShape({1, 9}),
+                            kInputPlaceholderReward, kRewardTensor, &out);
+    float neg, zero, pos;
+    neg = out.matrix<float>()(0, 0);
+    zero = out.matrix<float>()(0, 1);
+    pos = out.matrix<float>()(0, 2);
+
+    if (neg > zero && neg > pos)
+      return -1;
+    else if (pos > neg && pos > zero)
+      return 1;
+    else
+      return 0;
+  }
 
 	virtual double act(const SimAction* action) {
 		reward_ = 0;
-		// int prevLives = ale_->lives();
-		const ObjectAction* other = dynamic_cast<const ObjectAction*>(action);
-		int act = other->act_;
-    // XXX: how to check for game over
-		// for (int i = 0; i < numRepeats_ && !ale_->gameOver(); ++i) {
+		const ObjectAction* objAction = dynamic_cast<const ObjectAction*>(action);
 		for (int i = 0; i < numRepeats_; ++i) {
-      Tensor out;
-      // XXX: Call model -- pred = ?
-      if (model_.Run(currentState_->objVec_, "pred", &out).ok()) {
-        for (int j = 0; j < currentState_->objVec_.size(); ++j) {
-          currentState_->objVec_[j] = out.vec<float>()(j);
-        }
+
+      // TODO: MUCH OF THIS FUNCTION HARDCODED FOR PONG
+      // Pad history and append onehot-encoded action.
+      Vec input;
+      const int pad_len = 108 - history_.size();
+      for (int j = 0; j < pad_len; ++j) {
+        input.push_back(0.f);
       }
-      // XXX: How to get reward?
-			// reward_ += ale_->act(act);
+      for (int j = 0; j < history_.size(); ++j) {
+        input.push_back(history_[j]);
+      }
+      AppendOnehotAction(&input, objAction->act_, 6);
+
+      assert(input.size() == 114);
+
+      // Get next state
+      const Vec nextState = predictState(input);
+      // Get reward for the new state
+      int single_r = predictReward(nextState);
+      // Update history
+      if (history_.size() == 108) {
+        std::rotate(history_.begin(), history_.begin()+9, history_.end());
+        history_.erase(history_.end()-9, history_.end());
+        assert(history_.size() == 99);
+      }
+      for (int j = 0; j < nextState.size(); ++j) {
+        history_.push_back(nextState[j]);
+      }
+      // std::copy(nextState.begin(), nextState.end(), history_.end());
+      assert(history_.size() <= 108 && history_.size() % 9 == 0);
+      currentState_->objState_ = nextState;
+
+      if (single_r != 0) {
+        cout << "[dqn] reward " << single_r << " received!! breaking" << endl;
+        // For Pong, just terminate when we get a reward for now.
+        reward_ = single_r;
+        isTerminal_ = true;
+        // TODO: Fix the following gameover logic for other games.
+        break;
+      }
 		}
 
 		// TODO: update screen buffer
@@ -220,29 +316,31 @@ class ObjectSimulator : public Simulator {
 	// solution: fix life counter in xitari
 	// currently fixed: MsPacMan
 	virtual bool actDiffer() {
-		std::vector<float> currentObjVec = currentState_->objVec_;
-		std::vector<float> prevObjVec;
-    return false;
+		// std::vector<float> currentObjVec = currentState_->objState_;
+		// std::vector<float> prevObjVec;
+    return true;
     
-    // XXX
-		// for (int i = 0; i < actSet_.size(); ++i) {
-		// 	ale_->restoreSnapshot(currentSnapshot);
-		// 	for (int j = 0; j < numRepeats_ && !ale_->gameOver(); ++j) {
-		// 		ale_->act(actSet_[i]);
-		// 	}
-		// 	std::string snapshot = ale_->getSnapshot();
-		// 	if ((i > 0) && (prevSnapshot.compare(snapshot) != 0)) {
-		// 		ale_->restoreSnapshot(currentSnapshot);
-		// 		return true;
-		// 	}
-		// 	prevSnapshot = snapshot;
-		// }
-		// ale_->restoreSnapshot(currentSnapshot);
-		// return false;
+    // `XX: rewrite this
+    /*
+		for (int i = 0; i < actionSet_.size(); ++i) {
+			// for (int j = 0; j < numRepeats_ && !ale_->gameOver(); ++j) {
+			for (int j = 0; j < numRepeats_; ++j) {
+				ale_->act(actionSet_[i]);
+			}
+			std::string snapshot = ale_->getSnapshot();
+			if ((i > 0) && snapshot != prevObjVec)) {
+				ale_->restoreSnapshot(currentSnapshot);
+				return true;
+			}
+			prevSnapshot = snapshot;
+		}
+		ale_->restoreSnapshot(currentSnapshot);
+		return false;
+    */
 	}
 
   // TODO
-	void recordData(string path, int index, const SimAction* action) {}
+	// void recordData(string path, int index, const SimAction* action) {}
 
 };
 
