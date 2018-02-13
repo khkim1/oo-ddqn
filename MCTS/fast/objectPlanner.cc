@@ -104,8 +104,10 @@ int main(int argc, char** argv) {
 
     // real_sim->ale_->saveScreenPNG("screen_" + std::to_string(steps));
     r += rwd;
-    cout << " rwd: " << rwd << " total: " << r << endl;
-    // << " time: " << (total_time / (time_count + 1e-8)) << endl;
+    cout << " rwd: " << rwd << " total: " << r
+         << endl;
+  
+    delete conv_act;
   }
   cout <<  "steps: " << steps << "\nr: " << r << endl;
   delete real_sim;

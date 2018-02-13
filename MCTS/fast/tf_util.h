@@ -4,18 +4,21 @@
 // #include "tensorflow/cc/ops/const_op.h"
 // #include "tensorflow/core/protobuf/meta_graph.pb.h"
 #include "tensorflow/core/public/session.h"
+#include "constants.h"
 
 using namespace std;
 using namespace tensorflow;
 
-void AppendOnehotAction(vector<float>* v, int chosen, int num_actions);
+void AppendOnehotAction(Vec* v, int chosen, int num_actions);
+
+Vec AleScreenToObjState(const vector<unsigned char>& output_rgb_buffer);
 
 class TFModel {
   public:
     TFModel() = delete;
     TFModel(const string&);
-    // Disable copy constructor and assignment operator since they can mess things
-    // up because of unique_ptr member variable.
+    // Disable copy constructor and assignment operator since they can mess
+    // things up because of unique_ptr member variable.
     TFModel(const TFModel&) = delete;
     TFModel& operator= (const TFModel&) = delete;
     virtual ~TFModel();
@@ -23,12 +26,12 @@ class TFModel {
     // TODO
     // Status Load(const string&);
 
-    void RunVector(const vector<float>& input,
+    void RunVector(const Vec& input,
                    const string& placeholderName,
                    const string& outputName,
                    Tensor* output);
 
-    void RunMatrix(const vector<float>& input,
+    void RunMatrix(const Vec& input,
                    const TensorShape& shape,
                    const string& placeholderName,
                    const string& outputName,

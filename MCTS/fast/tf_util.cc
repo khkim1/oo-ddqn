@@ -19,8 +19,13 @@ void AppendOnehotAction(vector<float>* v, int chosen, int num_actions) {
   }
 }
 
-// Returns the session containing the loaded graph and weights for the model
-// specified by the path prefix.
+// TODO: Converts the output of ALE game screen into object state vector.
+Vec AleScreenToObjState(const vector<unsigned char>& output_rgb_buffer) {
+  Vec out({ -0.77987421,   0.10062893,   1.,
+            -0.02515723,   0.03773585,   1.,
+             0.77987421,   0.01257862,   1. });
+  return out;
+}
 
 TFModel::TFModel(const string& path_prefix) {
   model_prefix_ = path_prefix;

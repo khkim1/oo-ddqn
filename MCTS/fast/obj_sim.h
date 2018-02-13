@@ -124,14 +124,11 @@ class ObjectSimulator : public Simulator {
 		// pseudoGameover_(pseudoGameover), 
 		reward_(0) {
 
-    cout << "[dqn] LOADING STATE MODEL" << endl;
     stateModel_.reset(new TFModel(stateModelPrefix_));
-    cout << "[dqn] LOADING REWARD MODEL" << endl;
     rewardModel_.reset(new TFModel(rewardModelPrefix_));
-    cout << "[dqn] SETTING CURRENT STATE" << endl;
+    // XXX: current state should be coming from environment.
 		currentState_ = new ObjectState(
         kResetState, sizeof(kResetState) / sizeof(kResetState[0]));
-    cout << "[dqn] SETTING ACTION SET" << endl;
     for (int i = 0; i < num_actions; ++i) {
       actionSet_.push_back(new ObjectAction(i));
     }
@@ -285,7 +282,7 @@ class ObjectSimulator : public Simulator {
       currentState_->objState_ = nextState;
 
       if (single_r != 0) {
-        cout << "[dqn] reward " << single_r << " received!! breaking" << endl;
+        cout << "[mcts] reward " << single_r << " received!! breaking" << endl;
         // For Pong, just terminate when we get a reward for now.
         reward_ = single_r;
         isTerminal_ = true;
