@@ -1,12 +1,25 @@
-CXX := clang++ -std=c++11
-XITARI_ROOT := xitari/osx
-TF_ROOT := tfmac
+UNAME := $(shell uname)
+
+ifeq ($(UNAME), Linux)
+	CXX := g++ -std=c++11
+	XITARI_ROOT := xitari/linux
+	TF_ROOT := tflinux
+	TF_FLAGS := -Wl,-rpath='$ORIGIN/lib' -I$(TF_ROOT)/include -L$(TF_ROOT)/lib 
+	TF_LDFLAGS := -ltensorflow_cc
+endif
+
+ifeq ($(UNAME), Darwin)
+	CXX := clang++ -std=c++11
+	XITARI_ROOT := xitari/osx
+	TF_ROOT := tfmac
+	TF_FLAGS := -Wl,-rpath,'$ORIGIN/lib' -I$(TF_ROOT)/include -L$(TF_ROOT)/lib 
+	TF_LDFLAGS := -ltensorflow_cc -ltensorflow_framework
+endif
+
 FLAGS := -I$(XITARI_ROOT)/include/xitari -L$(XITARI_ROOT)/lib -L/usr/local/lib
 LDFLAGS := -lxitari -O2 -lgflags -lglog \
 	-lopencv_core -lopencv_highgui -lopencv_videoio -lopencv_photo \
 	-lopencv_imgcodecs -lopencv_video -lopencv_ml -lopencv_imgproc -lopencv_core
-TF_FLAGS := -Wl,-rpath,'$ORIGIN/lib' -I$(TF_ROOT)/include -L$(TF_ROOT)/lib 
-TF_LDFLAGS := -ltensorflow_cc -ltensorflow_framework
 
 # Old code by Xiaoxiao Guo
 atariUCTPlanner: atariUCTPlanner.o uct.o atari.hpp
@@ -45,4 +58,3 @@ clean:
 	rm -f uctPlanner uctPlanner.o uct.o atariUCTPlanner atariUCTPlanner.o \
 		mcts.o tf_util.o tf_util model_test.o model_test \
 		objectPlanner.o objectPlanner 
-
