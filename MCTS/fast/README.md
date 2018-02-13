@@ -1,10 +1,10 @@
 ## How to build
 
 1. Clone the repository
-2. Download platform-specific Tensorflow library files 
+1. Download platform-specific Tensorflow library files 
    (`libtensorflow_cc.so`, `libtensorflow_framework.so`)
-   from Team Drive to tf{linux,mac}/lib.
-3. make -f Makefile.{linux,mac} <target>
+   from Team Drive to tf{linux,mac}/lib
+1. make -f Makefile.{linux,mac} <target>
 
 If the compiler complains about missing library, you may need to
 create a symlink to libtensorflow\* files in the current folder.
