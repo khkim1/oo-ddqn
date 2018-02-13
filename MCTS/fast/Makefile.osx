@@ -8,46 +8,41 @@ LDFLAGS := -lxitari -O2 -lgflags -lglog \
 TF_FLAGS := -Wl,-rpath,'$ORIGIN/lib' -I$(TF_ROOT)/include -L$(TF_ROOT)/lib 
 TF_LDFLAGS := -ltensorflow_cc -ltensorflow_framework
 
-.PHONY all: uctPlanner atariUCTPlanner
-atariUCTPlanner: atariUCTPlanner.o uct.o tf_util.o atari.hpp
-	$(CXX) $(FLAGS) atariUCTPlanner.o uct.o -o atariUCTPlanner -pthread -fPIC -DNDEBUG $(LDFLAGS)
+# Old code by Xiaoxiao Guo
+atariUCTPlanner: atariUCTPlanner.o uct.o atari.hpp
+	$(CXX) $(FLAGS) atariUCTPlanner.o uct.o -o atariUCTPlanner \
+		-pthread -fPIC -DNDEBUG $(LDFLAGS)
 atariUCTPlanner.o: atariUCTPlanner.cpp uct.hpp atari.hpp
-	$(CXX) $(FLAGS) -c atariUCTPlanner.cpp -o atariUCTPlanner.o -pthread -fPIC -DNDEBUG $(LDFLAGS)
+	$(CXX) $(FLAGS) -c atariUCTPlanner.cpp -o atariUCTPlanner.o \
+		-pthread -fPIC -DNDEBUG $(LDFLAGS)
 uctPlanner:	uctPlanner.o uct.o
-	$(CXX) $(FLAGS) uctPlanner.o uct.o  -o uctPlanner
-uct.o:	uct.cpp	uct.hpp
+	$(CXX) $(FLAGS) uctPlanner.o uct.o  -o uctPlanner 
+uct.o:	uct.cpp	uct.hpp 
 	$(CXX)  uct.cpp -c -o uct.o
 uctPlanner.o:	uctPlanner.cpp  uct.hpp
-	$(CXX)  uctPlanner.cpp -c -o uctPlanner.o
+	$(CXX)  uctPlanner.cpp -c -o uctPlanner.o 
 
+# New code for oodqn
+.PHONY all: objectPlanner model_test atariUCTPlanner
 objectPlanner: objectPlanner.o mcts.o tf_util.o obj_sim.h
-	# $(CXX) $(FLAGS) objectPlanner.o -o objectPlanner -pthread -fPIC -DNDEBUG $(LDFLAGS)
 	$(CXX) $(FLAGS) $(TF_FLAGS) objectPlanner.o tf_util.o mcts.o \
-		-o objectPlanner $(TF_LDFLAGS) $(LDFLAGS)
-
+		-o objectPlanner -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
 objectPlanner.o: objectPlanner.cc mcts.h atari.h
-	# $(CXX) $(FLAGS) -c objectPlanner.cc -o objectPlanner.o -pthread -fPIC -DNDEBUG $(LDFLAGS)
 	$(CXX) $(FLAGS) $(TF_FLAGS) -c objectPlanner.cc \
-		-o objectPlanner.o $(TF_LDFLAGS) $(LDFLAGS)
-
+		-o objectPlanner.o -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
+obj_sim.o: tf_util.o obj_sim.h
+	$(CXX) $(FLAGS) $(TF_FLAGS) -c obj_sim.h -o obj_sim.o $(TF_LDFLAGS)
+model_test: tf_util.o model_test.o
+	$(CXX) $(TF_FLAGS) tf_util.o model_test.o -o model_test $(TF_LDFLAGS)
+model_test.o: tf_util.o model_test.cc
+	$(CXX) $(TF_FLAGS) -c model_test.cc -o model_test.o
+tf_util.o: tf_util.cc tf_util.h
+	$(CXX) $(TF_FLAGS) -c tf_util.cc -o tf_util.o
 mcts.o: mcts.cc mcts.h
 	$(CXX) mcts.cc -c -o mcts.o
 
-obj_sim.o: tf_util.o obj_sim.h
-	$(CXX) $(FLAGS) $(TF_FLAGS) -c obj_sim.h -o obj_sim.o $(TF_LDFLAGS)
-
-model_test: tf_util.o model_test.o
-	$(CXX) $(TF_FLAGS) tf_util.o model_test.o -o model_test $(TF_LDFLAGS)
-
-model_test.o: tf_util.o model_test.cc
-	$(CXX) $(TF_FLAGS) -c model_test.cc -o model_test.o
-
-tf_util.o: tf_util.cc tf_util.h
-	$(CXX) $(TF_FLAGS) -c tf_util.cc -o tf_util.o
-
 clean:
-	rm -f model_test.o model_test \
-		tf_util.o tf_util \
-		uctPlanner uctPlanner.o uct.o \
-		atariUCTPlanner atariUCTPlanner.o \
-		objectPlanner objectPlanner.o mcts.o 
+	rm -f uctPlanner uctPlanner.o uct.o atariUCTPlanner atariUCTPlanner.o \
+		mcts.o tf_util.o tf_util model_test.o model_test \
+		objectPlanner.o objectPlanner 
+
