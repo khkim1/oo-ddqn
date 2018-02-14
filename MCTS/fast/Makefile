@@ -46,10 +46,10 @@ objectPlanner.o: objectPlanner.cc mcts.h atari.h
 obj_sim.o: tf_util.o obj_sim.h
 	$(CXX) $(FLAGS) $(TF_FLAGS) -c obj_sim.h -o obj_sim.o $(TF_LDFLAGS)
 model_test: tf_util.o model_test.o
-	$(CXX) $(TF_FLAGS) tf_util.o model_test.o \
+	$(CXX) $(FLAGS) $(TF_FLAGS) tf_util.o model_test.o \
 		-o model_test $(TF_LDFLAGS) $(LDFLAGS)
 model_test.o: tf_util.o model_test.cc
-	$(CXX) $(TF_FLAGS) -c model_test.cc -o model_test.o
+	$(CXX) $(FLAGS) $(TF_FLAGS) -c model_test.cc -o model_test.o
 tf_util.o: tf_util.cc tf_util.h
 	$(CXX) $(FLAGS) $(TF_FLAGS) -c tf_util.cc -o tf_util.o
 mcts.o: mcts.cc mcts.h
