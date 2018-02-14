@@ -4,6 +4,7 @@
 #include "mcts.h"
 #include <ale_interface.hpp>
 #include <string>
+#include "constants.h"
 // #include "atari_images.hpp"
 
 
@@ -52,16 +53,20 @@ public:
 		return act->act_ == act_;
 	}
         
-        ~AtariAction() {
-            
-        }
+  ~AtariAction() {}
 };
 
 
 class AtariSimulator: public Simulator {
 public:
 
-	AtariSimulator (const std::string& romFile, /*bool updateFrame,*/ bool pseudoGameover, bool scaleReward, int numRepeats):
+	AtariSimulator (
+      const std::string& romFile,
+      /*bool updateFrame,*/
+      bool pseudoGameover,
+      bool scaleReward,
+      int numRepeats
+      ):
 		// updateFrame_(updateFrame),
 		pseudoGameover_(pseudoGameover), 
 		scaleReward_(scaleReward), 
@@ -86,14 +91,14 @@ public:
 		     << "\nPseudo GameOver: " << (pseudoGameover_ ? "True" : "False")
 		     << "\nScale Reward: " << (scaleReward_ ? "True" : "False" )
 		     << "\nMax R: " << maxReward_ << "  Min R: " << minReward_
-		     << "\nAct Size: " << actSet_.size() << "\n";
+		     << "\nAct Size: " << actSet_.size() << "[";
 		for (int i = 0; i < actSet_.size(); ++i) {
-			cout << actSet_[i] << " ";
+			cout << actSet_[i] << ", ";
 		}
-		cout << endl;
+		cout << "]\n" << endl;
 	}
 
-	~AtariSimulator () {
+	virtual ~AtariSimulator () {
 		delete ale_;
 		delete currentState_;
 		for (int i = 0; i < actVect_.size(); ++i) {
@@ -105,6 +110,10 @@ public:
 	int lives() {
 		return ale_->lives();
 	}
+
+  ale::ALEScreen getScreen() {
+    return ale_->getScreen();
+  }
 
 	virtual void setState(State* state) {
 		const AtariState* other = dynamic_cast<const AtariState*> (state);

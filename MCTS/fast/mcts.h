@@ -50,6 +50,9 @@ public:
   virtual bool isTerminal() = 0;
   // reset the state of the simulator
   virtual void reset() = 0;
+
+	virtual bool actDiffer() = 0;
+  virtual ~Simulator() {};
 };
 
 //================================================================

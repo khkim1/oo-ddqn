@@ -5,6 +5,10 @@
 
 // Convenient typedefs.
 typedef std::vector<float> Vec;
+typedef unsigned char Pixel;
+
+// Float error threshold for comparing state vectors.
+const float kEps = 1e-8;
 
 // Size of history to be fed into the state model.
 const int HISTORY_SIZE = 12;

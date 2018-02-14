@@ -20,10 +20,10 @@ void AppendOnehotAction(vector<float>* v, int chosen, int num_actions) {
 }
 
 // TODO: Converts the output of ALE game screen into object state vector.
-Vec AleScreenToObjState(const vector<unsigned char>& output_rgb_buffer) {
-  Vec out({ -0.77987421,   0.10062893,   1.,
-            -0.02515723,   0.03773585,   1.,
-             0.77987421,   0.01257862,   1. });
+const Vec AleScreenToObjState(const ale::ALEScreen& screen) {
+  const Vec out({ -0.77987421,   0.10062893,   1.,
+                  -0.02515723,   0.03773585,   1.,
+                   0.77987421,   0.01257862,   1. });
   return out;
 }
 

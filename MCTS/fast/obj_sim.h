@@ -1,6 +1,7 @@
 #ifndef __OBJ_SIM_H__
 #define __OBJ_SIM_H__
 
+#include <math.h>
 #include "mcts.h"
 #include <string>
 #include "tf_util.h"
@@ -28,8 +29,15 @@ class ObjectState: public State {
 
     virtual bool equal(State* state) {
       const ObjectState* other = dynamic_cast<const ObjectState*>(state);
-      if ((other == NULL) || (objState_ != other->objState_)) {
+      // dynamic_cast returns nullptr if it fails to cast
+      // (e.g. if the given state is not an ObjectState)
+      if (other == nullptr) {
         return false;
+      }
+      for (int i = 0; i < objState_.size(); ++i) {
+        if (abs(objState_[i] - other->objState_[i]) > kEps) {
+          return false;
+        }
       }
       return true;
     }
@@ -47,8 +55,8 @@ class ObjectState: public State {
       }
       std::cout << "]";
     }
-          
-    ~ObjectState() {}
+
+    virtual ~ObjectState() {}
 
     Vec objState_;
 };
@@ -312,6 +320,8 @@ class ObjectSimulator : public Simulator {
 	// conflict with pseudo death
 	// solution: fix life counter in xitari
 	// currently fixed: MsPacMan
+
+  // XXX: Fix this!!
 	virtual bool actDiffer() {
 		// std::vector<float> currentObjVec = currentState_->objState_;
 		// std::vector<float> prevObjVec;

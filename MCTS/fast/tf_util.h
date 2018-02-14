@@ -3,6 +3,7 @@
 
 // #include "tensorflow/cc/ops/const_op.h"
 // #include "tensorflow/core/protobuf/meta_graph.pb.h"
+#include <ale_interface.hpp>
 #include "tensorflow/core/public/session.h"
 #include "constants.h"
 
@@ -11,7 +12,7 @@ using namespace tensorflow;
 
 void AppendOnehotAction(Vec* v, int chosen, int num_actions);
 
-Vec AleScreenToObjState(const vector<unsigned char>& output_rgb_buffer);
+const Vec AleScreenToObjState(const ale::ALEScreen& screen);
 
 class TFModel {
   public:

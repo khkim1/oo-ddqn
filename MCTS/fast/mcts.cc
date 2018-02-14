@@ -140,13 +140,14 @@ void MCTSPlanner::plan() {
 
       if (current->isFull()) { //follow the UCT tree
         //sample a node using UCB1
-        int uctBranch = 0;
-        if (current == root_) {
-          assert (depth == 1);
-          uctBranch = getUCTRootIndex(current);
-        } else {
-          uctBranch = getUCTBranchIndex(current);
-        }
+        int uctBranch = getUCTBranchIndex(current);
+        // int uctBranch = 0;
+        // if (current == root_) {
+        //   assert (depth == 1);
+        //   uctBranch = getUCTRootIndex(current);
+        // } else {
+        //   uctBranch = getUCTBranchIndex(current);
+        // }
 
         sim_->setHistory(current->stateHistory(HISTORY_SIZE));
         sim_->setState(current->state_);
@@ -161,7 +162,8 @@ void MCTSPlanner::plan() {
         } else { //new s'
           //add new state node
           //then MC sampling
-          StateNode* nextNode = current->nodeVect_[uctBranch]->addStateNode(nextState, sim_->getActions(), r, sim_->isTerminal());
+          StateNode* nextNode = current->nodeVect_[uctBranch]->addStateNode(
+              nextState, sim_->getActions(), r, sim_->isTerminal());
 
           if (-1 == maxDepth_) {
             mcReturn = MC_Sampling(nextNode);
@@ -219,22 +221,22 @@ int MCTSPlanner::getGreedyBranchIndex() {
 
 }
 
-int MCTSPlanner::getUCTRootIndex(StateNode* node) {
-  double det = log((double)node->numVisits_);
-
-  vector<double> maximizer;
-  int size = node->nodeVect_.size();
-  for (int i = 0; i < size; ++i) {
-    //double val = node->nodeVect[i]->avgReturn + node->internalR[i];
-    double val = node->nodeVect_[i]->avgReturn_;
-    val += ucbScalar_ * sqrt(det / (double)node->nodeVect_[i]->numVisits_);
-    maximizer.push_back(val);
-  }
-  vector<double>::iterator max_it = std::max_element(maximizer.begin(), maximizer.end());
-  int index = std::distance(maximizer.begin(), max_it);
-
-  return index;
-}
+// int MCTSPlanner::getUCTRootIndex(StateNode* node) {
+//   double det = log((double)node->numVisits_);
+//
+//   vector<double> maximizer;
+//   int size = node->nodeVect_.size();
+//   for (int i = 0; i < size; ++i) {
+//     //double val = node->nodeVect[i]->avgReturn + node->internalR[i];
+//     double val = node->nodeVect_[i]->avgReturn_;
+//     val += ucbScalar_ * sqrt(det / (double)node->nodeVect_[i]->numVisits_);
+//     maximizer.push_back(val);
+//   }
+//   vector<double>::iterator max_it = std::max_element(maximizer.begin(), maximizer.end());
+//   int index = std::distance(maximizer.begin(), max_it);
+//
+//   return index;
+// }
 
 int MCTSPlanner::getUCTBranchIndex(StateNode* node) {
   double det = log((double)node->numVisits_);
