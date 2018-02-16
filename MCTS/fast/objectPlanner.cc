@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
         mcts.realStep(prev_action, newStateFromTrueEnv, rwd, real_sim->isTerminal());
         vector<State*> hist = mcts.root_->stateHistory(12);
         for (int i = 0; i < hist.size(); i++) {
-          cout << "[dbg]  State Hist (before)" << i << ": ";
+          cout << "[dbg] State Hist " << i << ": ";
           hist[i]->print();
           cout << endl;
         }
@@ -141,12 +141,6 @@ int main(int argc, char** argv) {
         }
       }
       mcts.plan();
-      vector<State*> hist = mcts.root_->stateHistory(12);
-      for (int i = 0; i < hist.size(); i++) {
-        cout << "[dbg]  State Hist (action)" << i << ": ";
-        hist[i]->print();
-        cout << endl;
-      }
       action = mcts.getAction();
       prev_planned = true;
       // ++data_index;
@@ -164,7 +158,7 @@ int main(int argc, char** argv) {
       ObjectAction* obj_action = dynamic_cast<ObjectAction*>(action);
       AtariAction* conv_act = ObjToAtariAction(obj_action, real_sim);
       prev_action = action;
-      cout << "step: " << steps << " live: " << real_sim->lives() << " act: ";
+      cout << "\nstep: " << steps << " live: " << real_sim->lives() << " act: ";
       conv_act->print();
 
       // Observe reward and next state from true env.
@@ -174,7 +168,7 @@ int main(int argc, char** argv) {
     }
     else {
       prev_action = action;
-      cout << "step: " << steps << " live: " << real_sim->lives() << " act: ";
+      cout << "\nstep: " << steps << " live: " << real_sim->lives() << " act: ";
       action->print();
       rwd = real_sim->act(action);
     }

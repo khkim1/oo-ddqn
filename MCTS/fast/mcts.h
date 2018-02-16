@@ -175,10 +175,10 @@ public:
   // called after planning
   SimAction* getAction() {
     int idx = getGreedyBranchIndex();
-    cout << "[dbg] MCTS: Greedy branch index: " << idx << endl;
-    cout << "[dbg] MCTS: Corresponding act: ";
-    root_->actVect_[idx]->print();
-    cout << endl;
+    // cout << "[dbg] MCTS: Greedy branch index: " << idx << endl;
+    // cout << "[dbg] MCTS: Corresponding act: ";
+    // root_->actVect_[idx]->print();
+    // cout << endl;
     return root_->actVect_[idx];
   }
 
