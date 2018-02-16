@@ -120,7 +120,8 @@ class ObjectSimulator : public Simulator {
                     const string& rewardModelPrefix,
                     bool scaleReward,
                     int numRepeats,
-                    int num_actions
+                    int num_actions,
+                    const Vec& objectState
                     // bool updateFrame,
                     // bool pseudoGameover, 
                     ):
@@ -134,9 +135,7 @@ class ObjectSimulator : public Simulator {
 
     stateModel_.reset(new TFModel(stateModelPrefix_));
     rewardModel_.reset(new TFModel(rewardModelPrefix_));
-    // XXX: current state should be coming from environment.
-		currentState_ = new ObjectState(
-        kResetState, sizeof(kResetState) / sizeof(kResetState[0]));
+		currentState_ = new ObjectState(objectState);
     for (int i = 0; i < num_actions; ++i) {
       actionSet_.push_back(new ObjectAction(i));
     }
@@ -196,12 +195,13 @@ class ObjectSimulator : public Simulator {
     return isTerminal_;
 	}
 
-	virtual void reset() {
+  virtual void reset() {}
+
+	virtual void reset(const Vec& objectState) {
     if (currentState_ != nullptr) {
       delete currentState_;
     }
-		currentState_ = new ObjectState(
-        kResetState, sizeof(kResetState) / sizeof(kResetState[0]));
+		currentState_ = new ObjectState(objectState);
 		lifeLost_ = false;
     isTerminal_ = false;
 	}
@@ -209,6 +209,11 @@ class ObjectSimulator : public Simulator {
 
   // TODO: The following prediction logic is hardcoded for Pong!!
   Vec predictState(const Vec& input) {
+    // cout << "[dbg] model input";
+    // for (int i = 0; i < input.size(); i++) {
+    //   cout << " " << input[i];
+    // }
+    // cout << endl;
     Tensor out;
     Vec nextState(9);
 
@@ -277,27 +282,31 @@ class ObjectSimulator : public Simulator {
       // Get reward for the new state
       int single_r = predictReward(nextState);
       // Update history
-      if (history_.size() == 108) {
-        std::rotate(history_.begin(), history_.begin()+9, history_.end());
-        history_.erase(history_.end()-9, history_.end());
-        assert(history_.size() == 99);
-      }
-      for (int j = 0; j < nextState.size(); ++j) {
-        history_.push_back(nextState[j]);
-      }
+      // if (history_.size() == 108) {
+      //   std::rotate(history_.begin(), history_.begin()+9, history_.end());
+      //   history_.erase(history_.end()-9, history_.end());
+      //   assert(history_.size() == 99);
+      // }
+      // for (int j = 0; j < nextState.size(); ++j) {
+      //   history_.push_back(nextState[j]);
+      // }
       // std::copy(nextState.begin(), nextState.end(), history_.end());
       assert(history_.size() <= 108 && history_.size() % 9 == 0);
-      currentState_->objState_ = nextState;
+      // currentState_->objState_ = nextState;
 
       if (single_r != 0) {
-        cout << "[mcts] reward " << single_r << " received!! breaking" << endl;
+        cout << "[mcts] nonzero reward predicted: " << single_r << endl;
+        // TODO: Fix the following gameover logic for other games.
         // For Pong, just terminate when we get a reward for now.
         reward_ = single_r;
         isTerminal_ = true;
-        // TODO: Fix the following gameover logic for other games.
         break;
       }
 		}
+
+    // cout << "[dbg] obj state vec: ";
+    // currentState_->print();
+    // cout << endl;
 
 		// TODO: update screen buffer
 		// if (updateFrame_) {
@@ -327,7 +336,6 @@ class ObjectSimulator : public Simulator {
 		// std::vector<float> prevObjVec;
     return true;
     
-    // `XX: rewrite this
     /*
 		for (int i = 0; i < actionSet_.size(); ++i) {
 			// for (int j = 0; j < numRepeats_ && !ale_->gameOver(); ++j) {

@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cassert>
 #include <iostream>
+#include "constants.h"
 using namespace std;
 
 //==================== Simulator Interface =======================
@@ -70,7 +71,7 @@ public:
   // r = R(sx, ax, s), (sx,ax) is determined in tree structure
   const double reward_;
   // isTerminal(s)
-  const bool isTerminal_;
+  bool isTerminal_;
   // n(s)
   int numVisits_;
   // action pointer, point to next new action
@@ -173,7 +174,12 @@ public:
   // get the planned action for root
   // called after planning
   SimAction* getAction() {
-    return root_->actVect_[getGreedyBranchIndex()];
+    int idx = getGreedyBranchIndex();
+    cout << "[dbg] MCTS: Greedy branch index: " << idx << endl;
+    cout << "[dbg] MCTS: Corresponding act: ";
+    root_->actVect_[idx]->print();
+    cout << endl;
+    return root_->actVect_[idx];
   }
 
   // return the most visited action for root node
@@ -232,6 +238,8 @@ public:
   void pruneAction(ActionNode* act);
 
   void pruneAncestors(int historySize);
+
+  void realStep(SimAction* act, State* newRealState, float rwd, bool isTerminal);
 
   /*
   // test whether the root contain the right information

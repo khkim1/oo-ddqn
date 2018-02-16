@@ -37,12 +37,14 @@ uctPlanner.o:	uctPlanner.cpp  uct.hpp
 
 # New code for oodqn
 .PHONY all: objectPlanner model_test atariUCTPlanner
-objectPlanner: objectPlanner.o mcts.o tf_util.o obj_sim.h
+objectPlanner: objectPlanner.o mcts.o tf_util.o util.o obj_sim.h
 	$(CXX) $(FLAGS) $(TF_FLAGS) objectPlanner.o tf_util.o mcts.o \
-		-o objectPlanner -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
-objectPlanner.o: objectPlanner.cc mcts.h atari.h
+		-o objectPlanner -pthread -fPIC $(TF_LDFLAGS) $(LDFLAGS)
+		# -o objectPlanner -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
+objectPlanner.o: objectPlanner.cc mcts.h atari.h util.h
 	$(CXX) $(FLAGS) $(TF_FLAGS) -c objectPlanner.cc \
-		-o objectPlanner.o -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
+		-o objectPlanner.o -pthread -fPIC $(TF_LDFLAGS) $(LDFLAGS)
+		# -o objectPlanner.o -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
 obj_sim.o: tf_util.o obj_sim.h
 	$(CXX) $(FLAGS) $(TF_FLAGS) -c obj_sim.h -o obj_sim.o $(TF_LDFLAGS)
 model_test: tf_util.o model_test.o
@@ -52,10 +54,12 @@ model_test.o: tf_util.o model_test.cc
 	$(CXX) $(FLAGS) $(TF_FLAGS) -c model_test.cc -o model_test.o
 tf_util.o: tf_util.cc tf_util.h
 	$(CXX) $(FLAGS) $(TF_FLAGS) -c tf_util.cc -o tf_util.o
-mcts.o: mcts.cc mcts.h
+util.o: util.h
+	$(CXX) $(FLAGS) -c util.h -o util.o
+mcts.o: mcts.cc mcts.h constants.h
 	$(CXX) mcts.cc -c -o mcts.o
 
 clean:
 	rm -f uctPlanner uctPlanner.o uct.o atariUCTPlanner atariUCTPlanner.o \
-		mcts.o tf_util.o tf_util model_test.o model_test \
+		util.o mcts.o tf_util.o tf_util model_test.o model_test \
 		objectPlanner.o objectPlanner 

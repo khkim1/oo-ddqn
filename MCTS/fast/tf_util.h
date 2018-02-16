@@ -12,8 +12,6 @@ using namespace tensorflow;
 
 void AppendOnehotAction(Vec* v, int chosen, int num_actions);
 
-const Vec AleScreenToObjState(const ale::ALEScreen& screen);
-
 class TFModel {
   public:
     TFModel() = delete;

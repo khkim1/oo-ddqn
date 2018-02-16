@@ -12,6 +12,7 @@
 #include "mcts.h"
 #include "atari.h"
 #include "obj_sim.h"
+#include "util.h"
 
 // test case 1 deterministic property (done)
 // test case 2 tree structure (done)
@@ -37,15 +38,17 @@ DEFINE_string(plan_sim, "model", "Simulator to use for planning. "
 
 // TODO: Super hardcoded for Pong. What's the best way to
 // convert actions?
-AtariAction* AtariToObjAction(const ObjectAction* obj_action,
-                                         AtariSimulator* atari_sim) {
-  // XXX: Correct way to convert action?
+AtariAction* ObjToAtariAction(const ObjectAction* obj_action,
+                              AtariSimulator* atari_sim) {
   AtariAction* conv_act;
   const int _a = obj_action->act_;
-  if (_a != 3 && _a != 4) {
-    return new AtariAction(atari_sim->actSet_[-2]);
-  } else {
+  if (_a == 0) {
+    return new AtariAction(atari_sim->actSet_[0]);
+  } else if (_a == 3 || _a == 4) {
     return new AtariAction(atari_sim->actSet_[_a-2]);
+  } else {
+		int idx = rand() % atari_sim->actVect_.size();
+    return new AtariAction(atari_sim->actSet_[idx]);
   }
 }
 
@@ -62,16 +65,18 @@ int main(int argc, char** argv) {
        << "Reward model prefix: " << FLAGS_reward_model << endl
        << endl;
 
+  const int FRAME_SKIP = 4;
   AtariSimulator* real_sim = new AtariSimulator(
-      FLAGS_rom_path, false, false, 4);
+      FLAGS_rom_path, false, false, FRAME_SKIP);
   Simulator* plan_sim; 
   if (FLAGS_plan_sim == "real") {
     // Question: Why different parameters from real_sim?
-    plan_sim = new AtariSimulator(FLAGS_rom_path, true, true, 4);
+    plan_sim = new AtariSimulator(FLAGS_rom_path, true, true, FRAME_SKIP);
   }
   else {
     plan_sim = new ObjectSimulator(
-        FLAGS_state_model, FLAGS_reward_model, true, 4, FLAGS_num_acts);
+        FLAGS_state_model, FLAGS_reward_model, true, FRAME_SKIP, FLAGS_num_acts,
+        AleScreenToObjState(real_sim->getScreen()));
   }
   MCTSPlanner mcts(plan_sim, FLAGS_depth, FLAGS_num_traj, FLAGS_ucb,
                    FLAGS_gamma);
@@ -89,29 +94,59 @@ int main(int argc, char** argv) {
     obj_state = AleScreenToObjState(real_sim->getScreen());
   }
 
+  // Skip loading frames
+  if (using_model) {
+    SimAction* tmp_act;
+    while (obj_state[2] == 0. ||
+          obj_state[5] == 0. ||
+          obj_state[8] == 0.) {
+      tmp_act = real_sim->getRandomAct();
+      real_sim->act(tmp_act);
+      obj_state = AleScreenToObjState(real_sim->getScreen());
+      cout << "[dbg] Skipping frame by taking random action..." << endl;
+    }
+  }
+
   while (!real_sim->isTerminal() && steps < max_steps) {
     steps++;
     SimAction* action = NULL;
-    // XXX
     if (plan_sim->actDiffer()) {
-    // if (real_sim->actDiffer()) {
       if (prev_planned && (!mcts.terminalRoot())) {
-        mcts.prune(prev_action, HISTORY_SIZE);
+        cout << "[dbg] Real step" << endl;
+        // mcts.prune(prev_action, HISTORY_SIZE);
+        ObjectState* newStateFromTrueEnv = new ObjectState(obj_state);
+        mcts.realStep(prev_action, newStateFromTrueEnv, rwd, real_sim->isTerminal());
+        vector<State*> hist = mcts.root_->stateHistory(12);
+        for (int i = 0; i < hist.size(); i++) {
+          cout << "[dbg]  State Hist (before)" << i << ": ";
+          hist[i]->print();
+          cout << endl;
+        }
+        
       } else {
         if (using_model) {
+          cout << "[dbg] Set new root" << endl;
           mcts.setRootNode(new ObjectState(obj_state),
                            plan_sim->getActions(),
-                           rwd, // XXX: correct?
+                           // Question: correct to use real reward here?
+                           rwd,
+                           // Question: What about isTermianl from real_sim?
                            real_sim->isTerminal());
         }
         else {
           mcts.setRootNode(real_sim->getState(),
                            real_sim->getActions(),
-                           rwd, // XXX: correct?
+                           rwd, // Question: correct to use real reward here?
                            real_sim->isTerminal());
         }
       }
       mcts.plan();
+      vector<State*> hist = mcts.root_->stateHistory(12);
+      for (int i = 0; i < hist.size(); i++) {
+        cout << "[dbg]  State Hist (action)" << i << ": ";
+        hist[i]->print();
+        cout << endl;
+      }
       action = mcts.getAction();
       prev_planned = true;
       // ++data_index;
@@ -120,16 +155,17 @@ int main(int argc, char** argv) {
       // }
       
     } else {
+      cout << "[dbg] Taking random action (no plan)" << endl;
       action = real_sim->getRandomAct();
       prev_planned = false;
     }
 
     if (using_model) {
       ObjectAction* obj_action = dynamic_cast<ObjectAction*>(action);
-      AtariAction* conv_act = AtariToObjAction(obj_action, real_sim);
+      AtariAction* conv_act = ObjToAtariAction(obj_action, real_sim);
       prev_action = action;
       cout << "step: " << steps << " live: " << real_sim->lives() << " act: ";
-      obj_action->print();
+      conv_act->print();
 
       // Observe reward and next state from true env.
       rwd = real_sim->act(conv_act);
@@ -146,6 +182,7 @@ int main(int argc, char** argv) {
     // real_sim->ale_->saveScreenPNG("screen_" + std::to_string(steps));
     r += rwd;
     cout << " rwd: " << rwd << " total: " << r << endl;
+
   }
   cout <<  "steps: " << steps << "\nr: " << r << endl;
   delete real_sim;

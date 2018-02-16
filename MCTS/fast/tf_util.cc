@@ -19,6 +19,7 @@ void AppendOnehotAction(vector<float>* v, int chosen, int num_actions) {
   }
 }
 
+/*
 // TODO: Converts the output of ALE game screen into object state vector.
 const Vec AleScreenToObjState(const ale::ALEScreen& screen) {
   const Vec out({ -0.77987421,   0.10062893,   1.,
@@ -26,6 +27,7 @@ const Vec AleScreenToObjState(const ale::ALEScreen& screen) {
                    0.77987421,   0.01257862,   1. });
   return out;
 }
+*/
 
 TFModel::TFModel(const string& path_prefix) {
   model_prefix_ = path_prefix;
