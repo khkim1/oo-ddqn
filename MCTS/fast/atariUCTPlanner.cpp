@@ -59,9 +59,9 @@ int main(int argc, char** argv) {
       }
       uct.plan();
       action = uct.getAction();
-      cout << "[dbg] Chosen action: ";
-      action->print();
-      cout << endl;
+      // cout << "[dbg] Chosen action: ";
+      // action->print();
+      // cout << endl;
       prev_planned = true;
       ++data_index;
       if(FLAGS_save_data) {

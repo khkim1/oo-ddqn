@@ -40,6 +40,7 @@ public:
   virtual void setState(State* state) = 0;
   // set the history of the simulator (probably ignore setState if this is used)
   virtual void setHistory(vector<State*> history) = 0;
+  virtual void setTerminal(bool) = 0;
   // get current state of simulator, no state is created
   virtual State* getState() = 0;
   // one step simulation

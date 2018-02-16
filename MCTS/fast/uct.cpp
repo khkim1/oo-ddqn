@@ -91,9 +91,6 @@ StateNode* ActionNode::getNextStateNode(State* state) {
 // return the new state node
 StateNode* ActionNode::addStateNode(State* _state, vector<SimAction*>& _actVect, double _reward, bool _isTerminal) {
   int index = stateVect_.size();
-  if (index > 0) {
-    cout << "Added state node, total: " << index+1 << endl;
-  }
   stateVect_.push_back(new StateNode(this, _state, _actVect,  _reward, _isTerminal));
   return stateVect_[index];
 }
@@ -190,15 +187,15 @@ int UCTPlanner::getGreedyBranchIndex() {
   assert(root_ != NULL);
   vector<double> maximizer;//maximizer.clear();
   int size = root_->nodeVect_.size();
-  cout << "[dbg] Root child scores: ";
+  // cout << "[dbg] Root child scores: ";
   for (int i = 0; i < size; ++i) {
     maximizer.push_back(root_->nodeVect_[i]->avgReturn_);
-    cout << root_->nodeVect_[i]->avgReturn_ << " ";
+    // cout << root_->nodeVect_[i]->avgReturn_ << " ";
   }
-  cout << endl;
+  // cout << endl;
   vector<double>::iterator max_it = std::max_element(maximizer.begin(), maximizer.end());
   int index = std::distance(maximizer.begin(), max_it);
-  cout << "[dbg] Chosen root child index: " << index << endl;
+  // cout << "[dbg] Chosen root child index: " << index << endl;
 
   return index;
 
@@ -239,7 +236,6 @@ int UCTPlanner::getUCTBranchIndex(StateNode* node) {
 
 void UCTPlanner::updateValues(StateNode* node, double mcReturn) {
   double totalReturn(mcReturn);
-  cout << "[dbg] Total return: " << totalReturn << endl;
   if (node->numVisits_ == 0) {
     node->firstMC_ = totalReturn;
   }
@@ -267,9 +263,9 @@ double UCTPlanner::MC_Sampling(StateNode* node, int depth) {
     vector<SimAction*>& actions = sim_->getActions();
     int actID = rand() % actions.size();
     double r = sim_->act(actions[actID]);
-    if (r != 0) {
-      cout << "[dbg] rollout reward: " << r << endl;
-    }
+    // if (r != 0) {
+    //   cout << "[dbg] rollout reward: " << r << endl;
+    // }
     mcReturn += discnt * modifyReward(r);
     discnt *= gamma_;
   }

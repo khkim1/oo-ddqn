@@ -177,6 +177,10 @@ class ObjectSimulator : public Simulator {
     }
   }
 
+  virtual void setTerminal(bool terminal) {
+    isTerminal_ = terminal;
+  }
+
 	virtual State* getState() {
 		return currentState_;
 	}

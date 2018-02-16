@@ -384,6 +384,8 @@ void MCTSPlanner::realStep(SimAction* act, State* newRealState, float rwd, bool 
   root_ = nextRoot;
   // root_->parentAct_ = NULL;
   sim_->setHistory(root_->stateHistory(HISTORY_SIZE));
+  sim_->setState(newRealState);
+  sim_->setTerminal(isTerminal);
 }
 
 // XXX: Finish this

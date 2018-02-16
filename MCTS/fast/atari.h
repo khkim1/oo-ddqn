@@ -115,6 +115,8 @@ public:
     return ale_->getScreen();
   }
 
+  virtual void setTerminal(bool) {}
+
 	virtual void setState(State* state) {
 		const AtariState* other = dynamic_cast<const AtariState*> (state);
 		currentState_->snapshot_ = other->snapshot_;
