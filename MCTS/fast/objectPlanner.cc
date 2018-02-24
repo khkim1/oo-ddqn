@@ -7,6 +7,7 @@
 #include <vector>
 // #include <time.h>
 // #include <sys/stat.h>
+#include <stdio.h>
 
 #include "constants.h"
 #include "mcts.h"
@@ -32,6 +33,7 @@ DEFINE_string(state_model, "", "Prefix to state model ckpt");
 DEFINE_string(reward_model, "", "Prefix to reward model ckpt");
 DEFINE_string(plan_sim, "model", "Simulator to use for planning. "
                         "Either \"real\" or \"model\"");
+DEFINE_string(frame_prefix, "", "Prefix for saved screen frames in PNG.");
 // DEFINE_double(leaf, 0, "Leaf Value");
 // DEFINE_bool(save_data, false, "True to save state and action pairs");
 // DEFINE_string(save_path, "output", "Path to save training data pairs");
@@ -55,6 +57,9 @@ AtariAction* ObjToAtariAction(const ObjectAction* obj_action,
 int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
   srand(time(0));
+  const bool save_frame = (FLAGS_frame_prefix != "");
+  char frame_fn[80];
+
   cout << "Rom: " << FLAGS_rom_path << endl
        << "Num of traj: " << FLAGS_num_traj << endl
        << "Depth: " << FLAGS_depth << endl
@@ -63,6 +68,7 @@ int main(int argc, char** argv) {
        << "Discount (gamma): " << FLAGS_gamma << endl
        << "State model prefix: " << FLAGS_state_model << endl
        << "Reward model prefix: " << FLAGS_reward_model << endl
+       << "Saving screen frames: " << (save_frame ? FLAGS_frame_prefix : "no")
        << endl;
 
   const int FRAME_SKIP = 4;
@@ -90,16 +96,16 @@ int main(int argc, char** argv) {
   const bool using_model = (FLAGS_plan_sim == "model");
   Vec obj_state;
   // int data_index = 0;
-  if (using_model) {
-    obj_state = AleScreenToObjState(real_sim->getScreen());
-  }
 
-  // Skip loading frames
   if (using_model) {
+    // Initial object state vector
+    obj_state = AleScreenToObjState(real_sim->getScreen());
+
+    // Skip loading frames
     SimAction* tmp_act;
     while (obj_state[2] == 0. ||
-          obj_state[5] == 0. ||
-          obj_state[8] == 0.) {
+           obj_state[5] == 0. ||
+           obj_state[8] == 0.) {
       tmp_act = real_sim->getRandomAct();
       real_sim->act(tmp_act);
       obj_state = AleScreenToObjState(real_sim->getScreen());
@@ -110,21 +116,22 @@ int main(int argc, char** argv) {
   while (!real_sim->isTerminal() && steps < max_steps) {
     steps++;
     SimAction* action = NULL;
-    if (plan_sim->actDiffer()) {
-      if (prev_planned && (!mcts.terminalRoot())) {
-        cout << "[dbg] Real step" << endl;
-        // mcts.prune(prev_action, HISTORY_SIZE);
-        ObjectState* newStateFromTrueEnv = new ObjectState(obj_state);
-        mcts.realStep(prev_action, newStateFromTrueEnv, rwd, real_sim->isTerminal());
-        vector<State*> hist = mcts.root_->stateHistory(12);
-        for (int i = 0; i < hist.size(); i++) {
-          cout << "[dbg] State Hist " << i << ": ";
-          hist[i]->print();
-          cout << endl;
-        }
-        
-      } else {
-        if (using_model) {
+
+    // With learned dynamics model
+    if (using_model) {
+      /*
+      if (plan_sim->actDiffer()) {
+        if (prev_planned && (!mcts.terminalRoot())) {
+          cout << "[dbg] Real step" << endl;
+          ObjectState* newStateFromTrueEnv = new ObjectState(obj_state);
+          mcts.realStep(prev_action, newStateFromTrueEnv, rwd, real_sim->isTerminal());
+          // vector<State*> hist = mcts.root_->stateHistory(12);
+          // for (int i = 0; i < hist.size(); i++) {
+          //   cout << "[dbg] State Hist " << i << ": ";
+          //   hist[i]->print();
+          //   cout << endl;
+          // }
+        } else {
           cout << "[dbg] Set new root" << endl;
           mcts.setRootNode(new ObjectState(obj_state),
                            plan_sim->getActions(),
@@ -133,28 +140,16 @@ int main(int argc, char** argv) {
                            // Question: What about isTermianl from real_sim?
                            real_sim->isTerminal());
         }
-        else {
-          mcts.setRootNode(real_sim->getState(),
-                           real_sim->getActions(),
-                           rwd, // Question: correct to use real reward here?
-                           real_sim->isTerminal());
-        }
+        mcts.plan();
+        action = mcts.getAction();
+        prev_planned = true;
+        cout << "[dbg] Taking planned action" << endl;
+      } else {
+        cout << "[dbg] Taking random action" << endl;
+        action = real_sim->getRandomAct();
+        prev_planned = false;
       }
-      mcts.plan();
-      action = mcts.getAction();
-      prev_planned = true;
-      // ++data_index;
-      // if(FLAGS_save_data) {
-      //   sim->recordData(FLAGS_save_path, data_index, action);
-      // }
-      
-    } else {
-      cout << "[dbg] Taking random action (no plan)" << endl;
-      action = real_sim->getRandomAct();
-      prev_planned = false;
-    }
 
-    if (using_model) {
       ObjectAction* obj_action = dynamic_cast<ObjectAction*>(action);
       AtariAction* conv_act = ObjToAtariAction(obj_action, real_sim);
       prev_action = action;
@@ -165,10 +160,38 @@ int main(int argc, char** argv) {
       rwd = real_sim->act(conv_act);
       obj_state = AleScreenToObjState(real_sim->getScreen());
       delete conv_act;
+      */
     }
+
+    // With real simulator
     else {
+      // XXX
+      // if (plan_sim->actDiffer()) {
+      if (real_sim->actDiffer()) {
+        if (prev_planned && (!mcts.terminalRoot())) {
+          mcts.prune(prev_action, -1);
+        } else {
+          mcts.setRootNode(real_sim->getState(),
+                           real_sim->getActions(),
+                           rwd, // Question: correct to use real reward here?
+                           real_sim->isTerminal());
+        }
+        mcts.plan();
+        action = mcts.getAction();
+        prev_planned = true;
+        // ++data_index;
+        // if(FLAGS_save_data) {
+        //   sim->recordData(FLAGS_save_path, data_index, action);
+        // }
+        cout << "[dbg] Taking planned action" << endl;
+      } else {
+        cout << "[dbg] Taking random action" << endl;
+        action = real_sim->getRandomAct();
+        prev_planned = false;
+      }
+
       prev_action = action;
-      cout << "\nstep: " << steps << " live: " << real_sim->lives() << " act: ";
+      cout << "step: " << steps << " live: " << real_sim->lives() << " act: ";
       action->print();
       rwd = real_sim->act(action);
     }
@@ -177,7 +200,13 @@ int main(int argc, char** argv) {
     r += rwd;
     cout << " rwd: " << rwd << " total: " << r << endl;
 
+    // Save screen if flag is true.
+    if (save_frame) {
+      sprintf(frame_fn, "%s%04d.png", FLAGS_frame_prefix.c_str(), steps);
+      real_sim->screenToPNG(frame_fn);
+    }
   }
+
   cout <<  "steps: " << steps << "\nr: " << r << endl;
   delete real_sim;
   delete plan_sim;

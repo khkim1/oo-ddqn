@@ -113,7 +113,8 @@ StateNode* ActionNode::getNextStateNode(State* state) {
 StateNode* ActionNode::addStateNode(State* _state, vector<SimAction*>& _actVect, double _reward, bool _isTerminal) {
   int index = stateVect_.size();
   if (index > 0) {
-    cout << "Added state node, total: " << index+1 << endl;
+    cout << "[dbg] Multiple states for same (s,a) pair detected! Total count: "
+         << index+1 << endl;
   }
   stateVect_.push_back(new StateNode(this, _state, _actVect,  _reward, _isTerminal));
   return stateVect_[index];
@@ -122,16 +123,16 @@ StateNode* ActionNode::addStateNode(State* _state, vector<SimAction*>& _actVect,
 
 // ================  uct part =========================
 void MCTSPlanner::plan() {
-  cout << "[dbg] MCTS: Planning started" << endl;
+  // cout << "[dbg] MCTS: Planning started" << endl;
   assert(root_ != NULL);
 
-  // // to avoid treat root differently than other nodes, when first see a root, just draw a MC sample trajectory
-  // int rootOffset = root_->numVisits_;
-  // if (rootOffset == 0) {
-  //   root_->numVisits_++;
-  //   rootOffset++;
-  // }
-  int rootOffset = 0;
+  // to avoid treat root differently than other nodes, when first see a root, just draw a MC sample trajectory
+  int rootOffset = root_->numVisits_;
+  if (rootOffset == 0) {
+    root_->numVisits_++;
+    rootOffset++;
+  }
+  // int rootOffset = 0;
 
   for (int trajectory = rootOffset; trajectory < numRuns_; ++trajectory) {
     // cout << "[dbg] MCTS: Planning trajectory: " << trajectory << endl;
@@ -141,8 +142,8 @@ void MCTSPlanner::plan() {
     while (true) {
       ++depth;
       if (current->isTerminal_) {
-        cout << "[dbg] MCTS: Current " << current
-             << " is terminal, breaking out" << endl;
+        // cout << "[dbg] MCTS: Current " << current
+        //      << " is terminal, breaking out" << endl;
         mcReturn = endEpisodeValue_;
         break;
       }
@@ -159,9 +160,21 @@ void MCTSPlanner::plan() {
         //   uctBranch = getUCTBranchIndex(current);
         // }
 
-        sim_->setHistory(current->stateHistory(HISTORY_SIZE));
+        // XXX: sim_->setHistory(current->stateHistory(HISTORY_SIZE));
         sim_->setState(current->state_);
         double r = sim_->act(current->actVect_[uctBranch]);
+
+        // cout << "[mc_sample] Expanding into a new leaf" << endl;
+        // vector<State*> hist = current->stateHistory(HISTORY_SIZE);
+        // for (int i = 0; i < hist.size(); i++) {
+        //   cout << "[mc_sample] State Hist " << i << ": ";
+        //   hist[i]->print();
+        //   cout << endl;
+        // }
+
+        // if (r != 0.) {
+        //   cout << "[dbg] Non zero reward in planning: " << r << endl;
+        // }
         State* nextState = sim_->getState();
 
         //if old node
@@ -174,6 +187,10 @@ void MCTSPlanner::plan() {
           //then MC sampling
           StateNode* nextNode = current->nodeVect_[uctBranch]->addStateNode(
               nextState, sim_->getActions(), r, sim_->isTerminal());
+
+          // cout << "[mc_sample] Current real state: ";
+          // current->state_->print();
+          // cout << endl;
 
           if (-1 == maxDepth_) {
             mcReturn = MC_Sampling(nextNode);
@@ -188,11 +205,23 @@ void MCTSPlanner::plan() {
         // cout << "[dbg] MCTS: Exploring next child: ";
         // current->actVect_[actID]->print();
         // cout<< endl;
-        sim_->setHistory(current->stateHistory(HISTORY_SIZE));
+        // XXX: sim_->setHistory(current->stateHistory(HISTORY_SIZE));
         sim_->setState(current->state_);
         double r = sim_->act(current->actVect_[actID]);
         StateNode* nextNode = current->nodeVect_[actID]->addStateNode(
             sim_->getState(), sim_->getActions(), r, sim_->isTerminal());
+
+        // cout << "[mc_sample] Expanding into a new leaf" << endl;
+        // vector<State*> hist = current->stateHistory(HISTORY_SIZE);
+        // for (int i = 0; i < hist.size(); i++) {
+        //   cout << "[mc_sample] State Hist " << i << ": ";
+        //   hist[i]->print();
+        //   cout << endl;
+        // }
+
+        // cout << "[mc_sample] Current real state: ";
+        // current->state_->print();
+        // cout << endl;
 
         if (-1 == maxDepth_) {
           mcReturn = MC_Sampling(nextNode);
@@ -273,9 +302,9 @@ int MCTSPlanner::getUCTBranchIndex(StateNode* node) {
 }
 
 void MCTSPlanner::updateValues(StateNode* node, double mcReturn) {
-  if (mcReturn != 0) {
-    cout << "[dbg] MCTS: non-zero MC Return: " << mcReturn << endl;
-  }
+  // if (mcReturn != 0) {
+  //   cout << "[dbg] MCTS: non-zero MC Return: " << mcReturn << endl;
+  // }
   double totalReturn(mcReturn);
   node->numVisits_++;
   while (node->parentAct_ != NULL) { //back until root is reached
@@ -291,8 +320,15 @@ void MCTSPlanner::updateValues(StateNode* node, double mcReturn) {
 
 double MCTSPlanner::MC_Sampling(StateNode* node, int depth) {
   double mcReturn(leafValue_);
-  sim_->setHistory(node->stateHistory(HISTORY_SIZE));
+  // XXX: sim_->setHistory(node->stateHistory(HISTORY_SIZE));
   sim_->setState(node->state_);
+  // vector<State*> hist = node->stateHistory(HISTORY_SIZE);
+  // for (int i = 0; i < hist.size(); i++) {
+  //   cout << "[mc_sample] State Hist " << i << ": ";
+  //   hist[i]->print();
+  //   cout << endl;
+  // }
+  // cout << "[mc_sample] Begin" << endl;
   double discnt = 1;
   for (int i = 0; i < depth; i++) {
     if (sim_->isTerminal()) {
@@ -300,6 +336,10 @@ double MCTSPlanner::MC_Sampling(StateNode* node, int depth) {
       break;
     }
     vector<SimAction*>& actions = sim_->getActions();
+    // Print the object state vector
+    // cout << "  ";
+    // sim_->getState()->print();
+    // cout << endl;
     int actID = rand() % actions.size();
     double r = sim_->act(actions[actID]);
     mcReturn += discnt * modifyReward(r);
@@ -311,7 +351,7 @@ double MCTSPlanner::MC_Sampling(StateNode* node, int depth) {
 
 double MCTSPlanner::MC_Sampling(StateNode* node) {
   double mcReturn(endEpisodeValue_);
-  sim_->setHistory(node->stateHistory(HISTORY_SIZE));
+  // XXX: im_->setHistory(node->stateHistory(HISTORY_SIZE));
   sim_->setState(node->state_);
   double discnt = 1;
   while (!sim_->isTerminal()) {
@@ -383,19 +423,17 @@ void MCTSPlanner::realStep(SimAction* act, State* newRealState, float rwd, bool 
   //      << endl;
   root_ = nextRoot;
   // root_->parentAct_ = NULL;
-  sim_->setHistory(root_->stateHistory(HISTORY_SIZE));
+  // XXX: sim_->setHistory(root_->stateHistory(HISTORY_SIZE));
   sim_->setState(newRealState);
   sim_->setTerminal(isTerminal);
 }
 
 // XXX: Finish this
 void MCTSPlanner::prune(SimAction* act, int historySize) {// check whether the root is terminal or not
-  /*
   StateNode * nextRoot = NULL;
   int size = root_->nodeVect_.size();
   for (int i = 0 ; i < size; ++i) {
     if (act->equal(root_->actVect_[i])) {
-      // XXX: What to do with this?
       assert(root_->nodeVect_[i]->stateVect_.size() == 1);
       nextRoot = root_->nodeVect_[i]->stateVect_[0];
 
@@ -416,7 +454,6 @@ void MCTSPlanner::prune(SimAction* act, int historySize) {// check whether the r
   delete root_;
   root_ = nextRoot;
   root_->parentAct_ = NULL;
-  */
 }
 
 /*

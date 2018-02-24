@@ -281,6 +281,17 @@ class ObjectSimulator : public Simulator {
 
       assert(input.size() == 114);
 
+      cout << "[act] Using padded history input: " << endl;
+      for (int __i = 0; __i < HISTORY_SIZE; ++__i) {
+        cout << "  [";
+        for (int __j = 0; __j < 9; ++__j) {
+          if (__j > 0)
+            cout << ", ";
+          cout << input[__i*9 + __j];
+        }
+        cout << "]" << endl;
+      }
+
       // Get next state
       const Vec nextState = predictState(input);
       // Get reward for the new state
@@ -296,7 +307,11 @@ class ObjectSimulator : public Simulator {
       // }
       // std::copy(nextState.begin(), nextState.end(), history_.end());
       assert(history_.size() <= 108 && history_.size() % 9 == 0);
-      // currentState_->objState_ = nextState;
+      currentState_->objState_ = nextState;
+
+      // cout << "[act] predicted state:" << endl << "  ";
+      // currentState_->print();
+      // cout << endl;
 
       if (single_r != 0) {
         cout << "[mcts] nonzero reward predicted: " << single_r << endl;

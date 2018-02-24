@@ -29,7 +29,7 @@ atariUCTPlanner.o: atariUCTPlanner.cpp uct.hpp atari.hpp
 	$(CXX) $(FLAGS) -c atariUCTPlanner.cpp -o atariUCTPlanner.o \
 		-pthread -fPIC -DNDEBUG $(LDFLAGS)
 uctPlanner:	uctPlanner.o uct.o
-	$(CXX) $(FLAGS) uctPlanner.o uct.o  -o uctPlanner 
+	$(CXX) $(FLAGS) uctPlanner.o uct.o -o uctPlanner 
 uct.o:	uct.cpp	uct.hpp 
 	$(CXX)  uct.cpp -c -o uct.o
 uctPlanner.o:	uctPlanner.cpp  uct.hpp
@@ -39,12 +39,12 @@ uctPlanner.o:	uctPlanner.cpp  uct.hpp
 .PHONY all: objectPlanner model_test atariUCTPlanner
 objectPlanner: objectPlanner.o mcts.o tf_util.o util.o obj_sim.h
 	$(CXX) $(FLAGS) $(TF_FLAGS) objectPlanner.o tf_util.o mcts.o \
-		-o objectPlanner -pthread -fPIC $(TF_LDFLAGS) $(LDFLAGS)
-		# -o objectPlanner -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
+		-o objectPlanner -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
+		# -o objectPlanner -pthread -fPIC $(TF_LDFLAGS) $(LDFLAGS)
 objectPlanner.o: objectPlanner.cc mcts.h atari.h util.h
 	$(CXX) $(FLAGS) $(TF_FLAGS) -c objectPlanner.cc \
-		-o objectPlanner.o -pthread -fPIC $(TF_LDFLAGS) $(LDFLAGS)
-		# -o objectPlanner.o -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
+		-o objectPlanner.o -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
+		# -o objectPlanner.o -pthread -fPIC $(TF_LDFLAGS) $(LDFLAGS)
 obj_sim.o: tf_util.o obj_sim.h
 	$(CXX) $(FLAGS) $(TF_FLAGS) -c obj_sim.h -o obj_sim.o $(TF_LDFLAGS)
 model_test: tf_util.o model_test.o

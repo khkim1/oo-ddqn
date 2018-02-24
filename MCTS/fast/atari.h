@@ -115,6 +115,12 @@ public:
     return ale_->getScreen();
   }
 
+  void screenToPNG(const string& filename) {
+    if (!ale_->screenToPNG(filename)) {
+      cout << "Failed to save screen to " << filename << endl;
+    }
+  }
+
   virtual void setTerminal(bool) {}
 
 	virtual void setState(State* state) {
