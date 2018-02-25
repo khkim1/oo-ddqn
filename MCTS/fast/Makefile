@@ -59,7 +59,12 @@ util.o: util.h
 mcts.o: mcts.cc mcts.h constants.h
 	$(CXX) mcts.cc -c -o mcts.o
 
+
+atari_sim.o:
+	$(CXX) $(FLAGS) -c atari_sim.cc -o atari_sim.o 
+
 clean:
 	rm -f uctPlanner uctPlanner.o uct.o atariUCTPlanner atariUCTPlanner.o \
 		util.o mcts.o tf_util.o tf_util model_test.o model_test \
-		objectPlanner.o objectPlanner 
+		objectPlanner.o objectPlanner \
+		atari_sim.o

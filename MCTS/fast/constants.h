@@ -3,6 +3,35 @@
 
 #include <vector>
 
+namespace oodqn {
+
+// Mapping from ale::Action enum to human-readable name.
+// Note: this requires C++11 to compile.
+const char * const ALE_ACTION_NAMES[] = {
+  "NOOP"           ,
+  "FIRE"           ,
+  "UP"             ,
+  "RIGHT"          ,
+  "LEFT"           ,
+  "DOWN"           ,
+  "UPRIGHT"        ,
+  "UPLEFT"         ,
+  "DOWNRIGHT"      ,
+  "DOWNLEFT"       ,
+  "UPFIRE"         ,
+  "RIGHTFIRE"      ,
+  "LEFTFIRE"       ,
+  "DOWNFIRE"       ,
+  "UPRIGHTFIRE"    ,
+  "UPLEFTFIRE"     ,
+  "DOWNRIGHTFIRE"  ,
+  "DOWNLEFTFIRE"  
+};
+
+}  // namespace oodqn
+
+// XXX: Put the following inside oodqn namespace.
+
 // Convenient typedefs.
 typedef std::vector<float> Vec;
 typedef unsigned char Pixel;
