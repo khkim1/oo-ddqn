@@ -34,6 +34,7 @@ DEFINE_string(reward_model, "", "Prefix to reward model ckpt");
 DEFINE_string(plan_sim, "model", "Simulator to use for planning. "
                         "Either \"real\" or \"model\"");
 DEFINE_string(frame_prefix, "", "Prefix for saved screen frames in PNG.");
+DEFINE_int32(frameskip, 4, "Frame skip");
 // DEFINE_double(leaf, 0, "Leaf Value");
 // DEFINE_bool(save_data, false, "True to save state and action pairs");
 // DEFINE_string(save_path, "output", "Path to save training data pairs");
@@ -71,18 +72,17 @@ int main(int argc, char** argv) {
        << "Saving screen frames: " << (save_frame ? FLAGS_frame_prefix : "no")
        << endl;
 
-  const int FRAME_SKIP = 4;
   AtariSimulator* real_sim = new AtariSimulator(
-      FLAGS_rom_path, false, false, FRAME_SKIP);
+      FLAGS_rom_path, false, false, FLAGS_frameskip);
   Simulator* plan_sim; 
   if (FLAGS_plan_sim == "real") {
     // Question: Why different parameters from real_sim?
-    plan_sim = new AtariSimulator(FLAGS_rom_path, true, true, FRAME_SKIP);
+    plan_sim = new AtariSimulator(FLAGS_rom_path, true, true, FLAGS_frameskip);
   }
   else {
     plan_sim = new ObjectSimulator(
-        FLAGS_state_model, FLAGS_reward_model, true, FRAME_SKIP, FLAGS_num_acts,
-        AleScreenToObjState(real_sim->getScreen()));
+        FLAGS_state_model, FLAGS_reward_model, true, FLAGS_frameskip,
+        FLAGS_num_acts, AleScreenToObjState(real_sim->getScreen()));
   }
   MCTSPlanner mcts(plan_sim, FLAGS_depth, FLAGS_num_traj, FLAGS_ucb,
                    FLAGS_gamma);
