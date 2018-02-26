@@ -56,15 +56,22 @@ tf_util.o: tf_util.cc tf_util.h
 	$(CXX) $(FLAGS) $(TF_FLAGS) -c tf_util.cc -o tf_util.o
 util.o: util.h
 	$(CXX) $(FLAGS) -c util.h -o util.o
+
 mcts.o: mcts.cc mcts.h constants.h
 	$(CXX) mcts.cc -c -o mcts.o
 
-
 atari_sim.o:
 	$(CXX) $(FLAGS) -c atari_sim.cc -o atari_sim.o 
+atariPlanner: atariPlanner.o mcts.o tf_util.o util.o atari_sim.o
+	$(CXX) $(FLAGS) $(TF_FLAGS) atariPlanner.o tf_util.o atari_sim.o mcts.o \
+		-o atariPlanner -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
+atariPlanner.o: mcts.h atari_sim.h util.h tf_util.h
+	$(CXX) $(FLAGS) $(TF_FLAGS) -c atariPlanner.cc \
+		-o atariPlanner.o -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
+
 
 clean:
 	rm -f uctPlanner uctPlanner.o uct.o atariUCTPlanner atariUCTPlanner.o \
 		util.o mcts.o tf_util.o tf_util model_test.o model_test \
 		objectPlanner.o objectPlanner \
-		atari_sim.o
+		atari_sim.o mcts.o atariPlanner.o atariPlanner

@@ -1,11 +1,8 @@
 #ifndef __MCTS_H__
 #define __MCTS_H__
 
-#include <algorithm>
 #include <vector>
 #include <cmath>
-#include <cassert>
-#include <iostream>
 #include "constants.h"
 #include "simulator.h"
 
@@ -15,18 +12,18 @@ class ActionNode;
 
 class StateNode {
 public:
-  StateNode(ActionNode* _parent, State* _state, const vector<Action*>& _actions,
-            double _reward);
+  StateNode(ActionNode* _parent, const State* _state,
+            const std::vector<const Action*>& _actions,
+            double _reward, bool _terminal);
   virtual ~StateNode();
 
   // True if all child actions have been explored.
   bool explored() const;
 
   // Create a new child ActionNode for the next unexplored action.
-  // XXX: return the index of new action in A(s)
+  // Return the index of new action in A(s)
   int addActionNode();
 
-protected:
   // Parent action that led to this state.
   ActionNode* parent_;
 
@@ -38,164 +35,152 @@ protected:
   const double reward_;
 
   // Number of times this node was visited: N(s)
-  int numVisits_;
+  int visits_;
 
   // Index of the next action to explore.
   int next_action_idx_;
 
   // List of actions that can be taken from this state.
-  vector<Action*> actions_;
+  std::vector<Action*> actions_;
 
   // Child action node for each action tried.
-  vector<ActionNode*> children_;
+  std::vector<ActionNode*> children_;
 
-  // XXX
-  // isTerminal(s)
-  // bool isTerminal_;
+  // Whether this node is terminal.
+  bool terminal_;
 };
 
 class ActionNode {
 public:
   ActionNode(StateNode* _state);
   ~ActionNode() ;
-  // Return the child StateNode containing the given state.
-  StateNode* getStateNode(State* state) const;
+  // Return the child StateNode containing the given state *for planning*
+  StateNode* getStateNode(const State* state) const;
 
   // Create and return a child StateNode for the given next state.
-  StateNode* addStateNode(State* _state, const vector<Action*>& _actions,
-                          double _reward) ;
+  StateNode* addStateNode(const State* state,
+                          const std::vector<const Action*>& actions,
+                          double reward, bool terminal);
 
-protcted:
+  // Return whether the given state is in {s' ~ T(s,a)} *for planning*
+  bool containsNextState(const State* state);
+
   // Parent state node.
   StateNode* const parent_;
 
   // List of children.
-  // XXX: This should always be size at most 1 for deterministic envs!
-  vector<StateNode*> children_;
+  // NOTE: This should always be size at most 1 for deterministic envs!
+  std::vector<StateNode*> children_;
 
   // Estimated Q(s,a)
   double q_value_;
 
   // Number of visits: N(s,a)
   int visits_;
-
-  // XXX: Not ported yet since we assume deterministic dynamics
-  // return whether sx in {s' ~ T(s,a)}
-  // bool containNextState(State* state);
 };
 
 class MCTSPlanner
 {
 public:
-  // Simulator interfaces
+  // Simulator interface.
   Simulator* sim_;
+
   // uct parameters
-  int maxDepth_;
-  int numRuns_;
-  double ucbScalar_;
+  int max_depth_;
+  int num_traj_;
+  double ucb_scale_;
   double gamma_;
-  double leafValue_;
-  double endEpisodeValue_;
+  // double leafValue_;
+  // double endEpisodeValue_;
   // rand seed value
   StateNode* root_;
 
-  MCTSPlanner(Simulator* _sim, int _maxDepth, int _numRuns, double _ucbScalar,
-      double _gamma, double _leafValue = 0, double _endEpisodeValue = 0):
+  MCTSPlanner(Simulator* _sim, int _max_depth, int _num_traj, double _ucb_scale,
+      double _gamma):
     sim_(_sim),
-    maxDepth_(_maxDepth),
-    numRuns_(_numRuns),
-    ucbScalar_(_ucbScalar),
+    max_depth_(_max_depth),
+    num_traj_(_num_traj),
+    ucb_scale_(_ucb_scale),
     gamma_(_gamma),
-    leafValue_(_leafValue),
-    endEpisodeValue_(_endEpisodeValue),
-    root_(NULL) {}
+    root_(nullptr) {}
 
-  // does not handle sim_
+  // We don't own sim_, so don't delete it here.
   ~MCTSPlanner() {
     clearTree();
   }
 
-  // set the root node in UCT
-  void setRootNode(State* _state, vector<SimAction*> _actVect, double _reward,
-      bool _isTerminal) {
-    if (root_ != NULL) {
+  // Set the new root node.
+  void setRootNode(const State* _state, const std::vector<const Action*>& _actions,
+                   double _reward, bool _terminal) {
+    if (root_ != nullptr) {
       clearTree();
     }
-    root_ = new StateNode(NULL, _state, _actVect, _reward, _isTerminal);
+    root_ = new StateNode(nullptr, _state, _actions, _reward, _terminal);
   }
 
-  // start planning
+  // Plan a single step.
   void plan();
 
-  // get the planned action for root
-  // called after planning
-  SimAction* getAction() {
-    int idx = getGreedyBranchIndex();
+  // Obtain the planned action for root after planning
+  Action* getAction() {
+    const int idx = getGreedyBranchIndex();
     // cout << "[dbg] MCTS: Greedy branch index: " << idx << endl;
     // cout << "[dbg] MCTS: Corresponding act: ";
     // root_->actVect_[idx]->print();
     // cout << endl;
-    return root_->actVect_[idx];
+    return root_->actions_[idx];
   }
 
-  // return the most visited action for root node
-  int getMostVisitedBranchIndex();
-  // return the most visited action for root node
+  // Return the action with highest value for root node
   int getGreedyBranchIndex();
-  // return the index of action in root
-  // add a new action node to tree if the action is never sampled
-  int getUCTRootIndex(StateNode* node);
-  // return the index of action to sample
-  // add a new action node to tree if the action is never sampled
+
+  // Return the index of action to sample.
+  // Add a new action node to tree if the action wass never sampled
   int getUCTBranchIndex(StateNode* node);
 
-  // update the values along the path from leaf to root
-  // update the counters
-  void updateValues(StateNode* node, double mcReturn);
-  // sample trajectory to a depth
-  double MC_Sampling(StateNode* node, int depth);
-  // sample to the end of an episode
-  double MC_Sampling(StateNode* node);
+  // Backpropagate along the path from leaf to root based on the
+  // MC sample of return by updating values and counters.
+  void updateValues(StateNode* node, double mc_return);
+  // Sample trajectory to the specified depth
+  double rollout(StateNode* node, int depth);
 
-  // modify the reward function
-  // currently it does nothing
-  double modifyReward(double orig) {
-    return orig;
-  }
+  // Memory management and search tree pruning.
+  void prune(Action* acttion, int history_size);
+  void pruneState(StateNode* node);
+  void pruneAction(ActionNode* node);
+  void pruneAncestors(int history_size);
 
-  void printRootValues() {
-    int size = root_->nodeVect_.size();
-    for (int i = 0; i < size; ++i) {
-      double val = root_->nodeVect_[i]->avgReturn_;
-      int numVist = root_->nodeVect_[i]->numVisits_;
-      cout << "(";
-      root_->actVect_[i]->print();
-      cout << "," << val << "," << numVist << ") ";
-    }
-    cout << root_->isTerminal_ ;
-    // cout << endl;
-  }
-
-  // release all nodes
+  // Wipe the search tree.
   void clearTree() {
-    if (root_ != NULL) {
+    if (root_ != nullptr) {
       pruneState(root_);
     }
-    root_ = NULL;
+    root_ = nullptr;
   }
-  // adjust UCT tree by pruning out all other branches
+
   bool terminalRoot() {
-    return root_->isTerminal_;
+    return root_->terminal_;
   }
-  void prune(SimAction* act, int historySize);
-  // prune out state node and its children
-  void pruneState(StateNode* state);
-  // prune out action node and its children
-  void pruneAction(ActionNode* act);
 
-  void pruneAncestors(int historySize);
+  // void realStep(SimAction* act, State* newRealState, float rwd, bool isTerminal);
 
-  void realStep(SimAction* act, State* newRealState, float rwd, bool isTerminal);
+  // Return the most visited action for root node
+  // int getMostVisitedBranchIndex();
+  // // Sample to the end of an episode
+  // double MC_Sampling(StateNode* node);
+
+  // void printRootValues() {
+  //   int size = root_->nodeVect_.size();
+  //   for (int i = 0; i < size; ++i) {
+  //     double val = root_->nodeVect_[i]->avgReturn_;
+  //     int numVist = root_->nodeVect_[i]->numVisits_;
+  //     cout << "(";
+  //     root_->actVect_[i]->print();
+  //     cout << "," << val << "," << numVist << ") ";
+  //   }
+  //   cout << root_->isTerminal_ ;
+  //   // cout << endl;
+  // }
 };
 
 }  // namespace oodqn

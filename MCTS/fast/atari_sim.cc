@@ -1,11 +1,24 @@
 #include <glog/logging.h>
+#include <vector>
+#include <string>
 #include "atari_sim.h"
 // #include "mcts.h"
 // #include <ale_interface.hpp>
-// #include <string>
 #include "constants.h"
 
 using namespace std;
+
+string stringifyActions(const vector<const oodqn::Action*>& actions) {
+  string out = "";
+  if (actions.size() > 0) {
+    out += actions[0]->str();
+    for (int i = 1; i < actions.size(); ++i) {
+      out += ", " + actions[i]->str();
+    }
+  }
+
+  return ("[" + out + "]");
+}
 
 namespace oodqn {
 
@@ -22,9 +35,12 @@ void AtariState::setSnapshot(const string& snapshot) {
 string AtariState::getSnapshot() const {
   return snapshot_;
 }
-bool AtariState::equals(const State& rhs) const {
-  const AtariState& other = static_cast<const AtariState&>(rhs);
-  return snapshot_ == other.snapshot_;
+bool AtariState::equals(const State* rhs) const {
+  const AtariState* other = static_cast<const AtariState*>(rhs);
+  return snapshot_ == other->snapshot_;
+}
+bool AtariState::equals_planning(const State* rhs) const {
+  return equals(rhs);
 }
 AtariState* AtariState::clone() const {
   return new AtariState(*this);
@@ -46,9 +62,9 @@ string AtariState::getType() const {
 AtariAction::AtariAction(const ale::Action action) {
   action_ = action;
 }
-bool AtariAction::equals(const Action& rhs) const {
-  const AtariAction& other = static_cast<const AtariAction&>(rhs);
-  return action_ == other.action_;
+bool AtariAction::equals(const Action* rhs) const {
+  const AtariAction* other = static_cast<const AtariAction*>(rhs);
+  return action_ == other->action_;
 }
 Action* AtariAction::clone() const {
   return new AtariAction(*this);
@@ -78,12 +94,7 @@ AtariSim::AtariSim(const std::string& rom_file, int frameskip):
             << "\nROM: " << rom_file
             << "\nMin/Max reward: "
             << ale_->minReward() << " / " << ale_->maxReward()
-            << "\nAvailable actions: [";
-  for (const Action* _a : actions_) {
-    const AtariAction* action = static_cast<const AtariAction*>(_a);
-    LOG(INFO) << action->str() << ", ";
-  }
-  LOG(INFO) << "]" << endl;
+            << "\nAvailable actions: " << stringifyActions(actions_);
 }
 AtariSim::~AtariSim() {
   delete ale_;
@@ -96,25 +107,26 @@ void AtariSim::screenToPNG(const string& filename) const {
     LOG(ERROR) << "Failed to save screen to " << filename << endl;
   }
 }
-const State* AtariSim::getInternalState() const {
+const State* AtariSim::getState() const {
   return current_state_;
 }
-const State* AtariSim::getPlanningState() const {
-  return current_state_;
-}
-void AtariSim::setInternalState(const State& new_state) {
+// const State* AtariSim::getPlanningState() const {
+//   return current_state_;
+// }
+void AtariSim::setState(const State* new_state) {
   // XXX: ???
-  const AtariState& state = dynamic_cast<const AtariState&>(new_state);
-  current_state_->setSnapshot(state.getSnapshot());
+  const AtariState* state = dynamic_cast<const AtariState*>(new_state);
+  current_state_->setSnapshot(state->getSnapshot());
   ale_->restoreSnapshot(current_state_->getSnapshot());
 }
-float AtariSim::act(const Action& action) {
+double AtariSim::act(const Action* action) {
   float reward = 0.f;
-  const AtariAction& atari_action = dynamic_cast<const AtariAction&>(action);
-  const ale::Action ale_action = atari_action.getAleAction();
+  const AtariAction* atari_action = dynamic_cast<const AtariAction*>(action);
+  const ale::Action ale_action = atari_action->getAleAction();
   for (int i = 0; i < frameskip_ && !ale_->gameOver(); ++i) {
     reward += ale_->act(ale_action);
   }
+  current_state_->setSnapshot(ale_->getSnapshot());
   return reward;
 }
 void AtariSim::reset() {

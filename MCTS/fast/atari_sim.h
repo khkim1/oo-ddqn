@@ -1,9 +1,10 @@
 #ifndef __ATARI_SIM_H__
 #define __ATARI_SIM_H__
 
+#include <string>
+#include <ale_interface.hpp>
 #include "simulator.h"
 #include "mcts.h"
-#include <ale_interface.hpp>
 // #include "constants.h"
 
 namespace oodqn {
@@ -19,10 +20,11 @@ public:
 
   // Overrides from base class
   AtariState* clone() const override;
-  bool equals(const State&) const override;
+  bool equals(const State*) const override;
+  bool equals_planning(const State*) const override;
   std::string str() const override;
   void print() const override;
-  string getType() const override;
+  std::string getType() const override;
 
 protected:
   std::string snapshot_;
@@ -38,7 +40,7 @@ public:
   }
 
   // Overrides from base class
-  bool equals(const Action&) const override;
+  bool equals(const Action*) const override;
   Action* clone() const override;
   std::string str() const override;
   void print() const override;
@@ -52,14 +54,15 @@ public:
   AtariSim() = delete;
   AtariSim(const std::string& romFile, int frameskip);
   ale::ALEScreen getScreen() const;
-  void screenToPNG(const string& filename) const;
+  void screenToPNG(const std::string& filename) const;
   virtual ~AtariSim();
 
   // Overrides from base class
-  const State* getInternalState() const override;
-  const State* getPlanningState() const override;
-  void setInternalState(const State&) override;
-  float act(const Action&) override;
+  const State* getState() const override;
+  void setState(const State*) override;
+  // const State* getPlanningState() const override;
+  // void setInternalState(const State&) override;
+  double act(const Action*) override;
   void reset() override;
   bool isTerminal() const override;
   const std::vector<const Action*>& getActions() const override;
@@ -77,7 +80,7 @@ public:
 	AtariState* current_state_; 
 
 	// List of available actions.
-	vector<const Action*> actions_;
+  std::vector<const Action*> actions_;
 };
 
 } // namespace oodqn
