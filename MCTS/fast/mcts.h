@@ -7,132 +7,87 @@
 #include <cassert>
 #include <iostream>
 #include "constants.h"
-using namespace std;
+#include "simulator.h"
 
-//==================== Simulator Interface =======================
-class State
-{
-public:
-  // whether two states are the same
-  // used in s' ~ (s,a) checking
-  virtual bool equal(State* state) = 0;
-  // create and return a copy of state
-  virtual State* duplicate() = 0;
-  virtual void print() const = 0;
-  virtual ~State(){};
-};
+namespace oodqn {
 
-class SimAction
-{
-public:
-  // for pruning
-  virtual bool equal(SimAction* act) = 0;
-  // create and return a copy of action
-  virtual SimAction* duplicate() = 0;
-  virtual void print() const = 0;
-  virtual ~SimAction(){};
-};
-
-class Simulator
-{
-public:
-  // set the state of simulator
-  virtual void setState(State* state) = 0;
-  // set the history of the simulator (probably ignore setState if this is used)
-  virtual void setHistory(vector<State*> history) = 0;
-  virtual void setTerminal(bool) = 0;
-  // get current state of simulator, no state is created
-  virtual State* getState() = 0;
-  // one step simulation
-  virtual double act(const SimAction* action) = 0;
-  // get all available actions for current state
-  // need to handle memory of actions
-  virtual vector<SimAction*>& getActions() = 0;
-  // return whether current state is terminal state
-  virtual bool isTerminal() = 0;
-  // reset the state of the simulator
-  virtual void reset() = 0;
-
-	virtual bool actDiffer() = 0;
-  virtual ~Simulator() {};
-};
-
-//================================================================
-
-//=========================== UCT parts ==========================
 class ActionNode;
 
-class StateNode
-{
+class StateNode {
 public:
-  // parent action node, for updating tree
-  ActionNode* parentAct_;
-  // s
-  State* state_;
-  // r = R(sx, ax, s), (sx,ax) is determined in tree structure
-  const double reward_;
-  // isTerminal(s)
-  bool isTerminal_;
-  // n(s)
-  int numVisits_;
-  // action pointer, point to next new action
-  int actPtr_;
-  // A(s)
-  vector<SimAction*> actVect_;
-  // each node for one action in A(s)
-  vector<ActionNode*> nodeVect_;
-
-  // init state node
-  StateNode(ActionNode* _parentAct, State* _state, vector<SimAction*>& _actVect, double _reward, bool _isTerminal);
-
-  // Returns a history of states (up to given length). Needed to generate
-  // stacked frames to pass to simulator.
-  vector<State*> stateHistory(int length);
-
-  // free s, A(s) & A(s) nodes
+  StateNode(ActionNode* _parent, State* _state, const vector<Action*>& _actions,
+            double _reward);
   virtual ~StateNode();
 
-  // return whether all actions are sampled
-  bool isFull();
+  // True if all child actions have been explored.
+  bool explored() const;
 
-  // create a node for next new action in A(s)
-  // return the index of new action in A(s)
+  // Create a new child ActionNode for the next unexplored action.
+  // XXX: return the index of new action in A(s)
   int addActionNode();
-};
 
-class ActionNode
-{
-public:
-  // parent state s, thus (s,a) is determined in tree structure
-  StateNode* const parentState_;
-  // keep s' ~ T(s,a)
-  vector<StateNode*> stateVect_;
-  // Q(s,a)
-  double avgReturn_;
-  // n(s,a)
+protected:
+  // Parent action that led to this state.
+  ActionNode* parent_;
+
+  // Corresponding simulator state for this state node.
+  State* state_;
+
+  // Reward received after transitioning into this state,
+  // i.e. R(s, a, s') where (s,a) are ancestors of this node.
+  const double reward_;
+
+  // Number of times this node was visited: N(s)
   int numVisits_;
 
-  // init action node
-  ActionNode(StateNode* _parentState);
+  // Index of the next action to explore.
+  int next_action_idx_;
 
-  // free state nodes
+  // List of actions that can be taken from this state.
+  vector<Action*> actions_;
+
+  // Child action node for each action tried.
+  vector<ActionNode*> children_;
+
+  // XXX
+  // isTerminal(s)
+  // bool isTerminal_;
+};
+
+class ActionNode {
+public:
+  ActionNode(StateNode* _state);
   ~ActionNode() ;
+  // Return the child StateNode containing the given state.
+  StateNode* getStateNode(State* state) const;
 
+  // Create and return a child StateNode for the given next state.
+  StateNode* addStateNode(State* _state, const vector<Action*>& _actions,
+                          double _reward) ;
+
+protcted:
+  // Parent state node.
+  StateNode* const parent_;
+
+  // List of children.
+  // XXX: This should always be size at most 1 for deterministic envs!
+  vector<StateNode*> children_;
+
+  // Estimated Q(s,a)
+  double q_value_;
+
+  // Number of visits: N(s,a)
+  int visits_;
+
+  // XXX: Not ported yet since we assume deterministic dynamics
   // return whether sx in {s' ~ T(s,a)}
-  bool containNextState(State* state) ;
-
-  // return the state node containing the next state
-  StateNode* getNextStateNode(State* state);
-
-  // create a state node for the next state
-  // return the new state node
-  StateNode* addStateNode(State* _state, vector<SimAction*>& _actVect, double _reward, bool _isTerminal) ;
+  // bool containNextState(State* state);
 };
 
 class MCTSPlanner
 {
 public:
-  // simulator interfaces
+  // Simulator interfaces
   Simulator* sim_;
   // uct parameters
   int maxDepth_;
@@ -241,22 +196,8 @@ public:
   void pruneAncestors(int historySize);
 
   void realStep(SimAction* act, State* newRealState, float rwd, bool isTerminal);
-
-  /*
-  // test whether the root contain the right information
-  bool testRoot(State* _state, double _reward, bool _isTerminal);
-
-  // test
-  void testDeterministicProperty() ;
-  bool testDeterministicPropertyState(StateNode* state) ;
-  bool testDeterministicPropertyAction(ActionNode* action) ;
-
-  // visit number checkings
-  // avg value checkings
-  void testTreeStructure() ;
-  bool testTreeStructureState(StateNode* state);
-  bool testTreeStructureAction(ActionNode* action);
-  */
 };
+
+}  // namespace oodqn
 
 #endif
