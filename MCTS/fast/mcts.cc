@@ -20,6 +20,7 @@ StateNode::StateNode(
   state_(_state->clone()),
   reward_(_reward),
   terminal_(_terminal),
+  visits_(0),
   next_action_idx_(0) {
   // Copy actions.
   const int size = _actions.size();
@@ -138,6 +139,7 @@ void MCTSPlanner::plan() {
     root_->visits_++;
     offset++;
   }
+  VLOG(2) << "Planning offset: " << offset;
 
   for (int traj = offset; traj < num_traj_; ++traj) {
     VLOG(1) << "Planning trajectory: " << traj;
