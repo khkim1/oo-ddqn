@@ -7,6 +7,8 @@
 
 using namespace std;
 
+namespace oodqn {
+
 vector<Pixel> CropScreen(const ale::ALEScreen& screen){
   const vector<Pixel> array = screen.getArray();
   assert(array.size() == 210 * 160);
@@ -86,3 +88,5 @@ Vec AleScreenToObjState(const ale::ALEScreen& screen){
 
   return object_coord;
 }
+
+}  // namespace oodqn

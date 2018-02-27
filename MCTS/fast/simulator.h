@@ -80,7 +80,7 @@ public:
   // for this step.
   virtual bool actionIgnored() const = 0;
   virtual ~Simulator() {};
-
+  virtual void saveFrame(const std::string&) const {};
 };
 
 } // namespace oodqn

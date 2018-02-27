@@ -80,9 +80,8 @@ void AtariAction::print() const {
 // AtariSim
 //
 
-AtariSim::AtariSim(const std::string& rom_file, int frameskip):
-  frameskip_(frameskip)
-{
+AtariSim::AtariSim(const std::string& rom_file, int frameskip) :
+  frameskip_(frameskip) {
   ale_ = new ale::ALEInterface(rom_file);
   current_state_ = new AtariState(ale_->getSnapshot());
   for (const auto& ale_action : ale_->getMinimalActionSet()) {
@@ -90,11 +89,13 @@ AtariSim::AtariSim(const std::string& rom_file, int frameskip):
   }
 
   // Print information about the created simulator
-  LOG(INFO) << "AtariSim Initialized:"
-            << "\nROM: " << rom_file
-            << "\nMin/Max reward: "
-            << ale_->minReward() << " / " << ale_->maxReward()
-            << "\nAvailable actions: " << stringifyActions(actions_);
+  cout << "\n >>> AtariSim Initialized <<<"
+       << "\n  * ROM: " << rom_file
+       << "\n  * Min reward: " << ale_->minReward() 
+       << "\n  * Max reward: " << ale_->maxReward()
+       << "\n  * Available actions: " << stringifyActions(actions_)
+       << "\n"
+       << endl;
 }
 AtariSim::~AtariSim() {
   delete ale_;
@@ -158,6 +159,12 @@ bool AtariSim::actionIgnored() const {
   ale_->restoreSnapshot(cur_ss);
   return true;
 }
+void AtariSim::saveFrame(const string& filename) const {
+  if (!ale_->screenToPNG(filename)) {
+    LOG(ERROR) << "Failed to save screen to " << filename;
+  }
+}
+
 
 /*
 class AtariSimulator: public Simulator {

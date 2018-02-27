@@ -28,13 +28,14 @@ const char * const ALE_ACTION_NAMES[] = {
   "DOWNLEFTFIRE"  
 };
 
+// Convenient typedefs.
+typedef std::vector<float> Vec;
+typedef unsigned char Pixel;
+
 }  // namespace oodqn
 
 // XXX: Put the following inside oodqn namespace.
 
-// Convenient typedefs.
-typedef std::vector<float> Vec;
-typedef unsigned char Pixel;
 
 // Float error threshold for comparing state vectors.
 const float kEps = 1e-8;

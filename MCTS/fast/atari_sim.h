@@ -3,9 +3,8 @@
 
 #include <string>
 #include <ale_interface.hpp>
-#include "simulator.h"
 #include "mcts.h"
-// #include "constants.h"
+#include "simulator.h"
 
 namespace oodqn {
 
@@ -67,6 +66,7 @@ public:
   bool isTerminal() const override;
   const std::vector<const Action*>& getActions() const override;
   bool actionIgnored() const override;
+  void saveFrame(const std::string&) const override;
 
 	// Frameskip determines how many times actions are repeated.
 	const int frameskip_;
@@ -76,7 +76,7 @@ public:
   // Instance of ALE simulator.
 	ale::ALEInterface* ale_;
 
-	// This should always match the ALE state.
+  // This should always match the ALE state.
 	AtariState* current_state_; 
 
 	// List of available actions.

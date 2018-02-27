@@ -1,15 +1,10 @@
 # Don't export platform-specific build output
+*.o
 atariUCTPlanner
-atariUCTPlanner.o
-uct.o
+atariPlanner
 uctPlanner
-uctPlanner.o
 objectPlanner
-objectPlanner.o
-tf_util.o
 model_test
-model_test.o
-mcts.o
 
 # Don't upload large library files
 libtensorflow_cc.so

@@ -68,10 +68,17 @@ atariPlanner: atariPlanner.o mcts.o tf_util.o util.o atari_sim.o
 atariPlanner.o: mcts.h atari_sim.h util.h tf_util.h
 	$(CXX) $(FLAGS) $(TF_FLAGS) -c atariPlanner.cc \
 		-o atariPlanner.o -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
+planner: planner.o mcts.o tf_util.o util.o atari_sim.o
+	$(CXX) $(FLAGS) $(TF_FLAGS) planner.o tf_util.o atari_sim.o mcts.o \
+		-o planner -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
+planner.o: mcts.h atari_sim.h util.h tf_util.h
+	$(CXX) $(FLAGS) $(TF_FLAGS) -c planner.cc \
+		-o planner.o -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
 
 
 clean:
 	rm -f uctPlanner uctPlanner.o uct.o atariUCTPlanner atariUCTPlanner.o \
 		util.o mcts.o tf_util.o tf_util model_test.o model_test \
 		objectPlanner.o objectPlanner \
-		atari_sim.o mcts.o atariPlanner.o atariPlanner
+		atari_sim.o mcts.o atariPlanner.o atariPlanner \
+		planner.o planner

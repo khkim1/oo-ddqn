@@ -9,6 +9,7 @@
 
 using namespace std;
 using namespace tensorflow;
+using oodqn::Vec;
 
 void AppendOnehotAction(Vec* v, int chosen, int num_actions);
 
