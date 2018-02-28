@@ -21,8 +21,11 @@ public:
   ~AtariObjState() {}
 
   AtariObjState& operator=(const AtariObjState &rhs) {
-    snapshot_ = rhs.snapshot_;
-    objvec_ = rhs.objvec_;
+    if (this != &rhs) {
+      snapshot_ = rhs.snapshot_;
+      objvec_ = rhs.objvec_;
+    }
+    return *this;
   }
 
   // Overrides from base class
