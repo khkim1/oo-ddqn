@@ -2,23 +2,10 @@
 #include <vector>
 #include <string>
 #include "atari_sim.h"
-// #include "mcts.h"
-// #include <ale_interface.hpp>
 #include "constants.h"
+#include "util.h"
 
 using namespace std;
-
-string stringifyActions(const vector<const oodqn::Action*>& actions) {
-  string out = "";
-  if (actions.size() > 0) {
-    out += actions[0]->str();
-    for (int i = 1; i < actions.size(); ++i) {
-      out += ", " + actions[i]->str();
-    }
-  }
-
-  return ("[" + out + "]");
-}
 
 namespace oodqn {
 

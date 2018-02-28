@@ -13,6 +13,7 @@
 #include "constants.h"
 #include "mcts.h"
 #include "atari_sim.h"
+#include "atari_obj_sim.h"
 // #include "obj_sim.h"
 // #include "util.h"
 
@@ -74,10 +75,18 @@ int main(int argc, char** argv) {
        << "\n  * Saving screen frames: " << (save_frame ? FLAGS_frame_prefix : "no")
        << endl;
 
-  Simulator* real_sim = new AtariSim(FLAGS_rom_path, FLAGS_frameskip);
-  Simulator* plan_sim; 
+  Simulator *real_sim, *plan_sim; 
+  if (FLAGS_obj_state) {
+    real_sim = new AtariObjSim(FLAGS_rom_path, FLAGS_frameskip);
+  } else {
+    real_sim = new AtariSim(FLAGS_rom_path, FLAGS_frameskip);
+  }
   if (FLAGS_plan_sim == "real") {
-    plan_sim = new AtariSim(FLAGS_rom_path, FLAGS_frameskip);
+    if (FLAGS_obj_state) {
+      plan_sim = new AtariObjSim(FLAGS_rom_path, FLAGS_frameskip);
+    } else {
+      plan_sim = new AtariSim(FLAGS_rom_path, FLAGS_frameskip);
+    }
   }
   // else {
   //   plan_sim = new ObjectSimulator(

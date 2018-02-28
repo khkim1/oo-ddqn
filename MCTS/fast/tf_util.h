@@ -1,8 +1,6 @@
 #ifndef __TF_UTIL_H__
 #define __TF_UTIL_H__
 
-// #include "tensorflow/cc/ops/const_op.h"
-// #include "tensorflow/core/protobuf/meta_graph.pb.h"
 #include <ale_interface.hpp>
 #include "tensorflow/core/public/session.h"
 #include "constants.h"
@@ -10,6 +8,8 @@
 using namespace std;
 using namespace tensorflow;
 using oodqn::Vec;
+
+namespace oodqn {
 
 void AppendOnehotAction(Vec* v, int chosen, int num_actions);
 
@@ -45,5 +45,7 @@ class TFModel {
                    const string& outputName,
                    Tensor* output);
 };
+
+}  // namespace oodqn
 
 #endif

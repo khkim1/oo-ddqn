@@ -2,6 +2,7 @@
 #define __CONSTANTS_H__
 
 #include <vector>
+#include <glog/logging.h>
 
 namespace oodqn {
 
@@ -29,8 +30,83 @@ const char * const ALE_ACTION_NAMES[] = {
 };
 
 // Convenient typedefs.
-typedef std::vector<float> Vec;
 typedef unsigned char Pixel;
+
+class Vec {
+public:
+  Vec() { values_.clear(); }
+  Vec(const std::vector<double> values) {
+    values_.clear();
+    std::copy(values.begin(), values.end(), values_.begin());
+  }
+
+  Vec(std::initializer_list<double> init) : values_(init) {}
+
+  Vec& operator=(const Vec &rhs) {
+    if (this == &rhs)
+      return *this;
+    values_ = rhs.values_;
+    return *this;
+  }
+
+  bool operator==(const Vec& rhs) const {
+    return (values_ == rhs.values_);
+  }
+
+  bool operator!=(const Vec& rhs) {
+    return !(*this == rhs);
+  }
+
+  std::string str() const {
+    std::string out;
+    out.reserve(100);
+    for (int i = 0; i < values_.size(); ++i) {
+      out.append(std::to_string(values_[i]));
+      out.append(", ");
+    }
+    return ("[" + out + "]");
+  }
+
+  void push_back(double item) {
+    values_.push_back(item);
+  }
+
+  std::vector<double, std::allocator<double>>::iterator begin() {
+    return values_.begin();
+  }
+
+  std::vector<double, std::allocator<double>>::const_iterator begin() const {
+    return values_.begin();
+  }
+
+  std::vector<double, std::allocator<double>>::iterator end() {
+    return values_.end();
+  }
+
+  std::vector<double, std::allocator<double>>::const_iterator end() const {
+    return values_.end();
+  }
+
+  std::vector<double>::size_type size() const {
+    return values_.size();
+  }
+
+  std::vector<double, std::allocator<double>>::reference operator[](
+      std::vector<double>::size_type __n) {
+    return values_.operator[](__n);
+  }
+
+  std::vector<double, std::allocator<double>>::const_reference operator[](
+      std::vector<double>::size_type __n) const {
+    return values_.operator[](__n);
+  }
+
+  bool empty() const {
+    return values_.empty();
+  } 
+
+  std::vector<double> values_;
+};
 
 }  // namespace oodqn
 

@@ -7,6 +7,8 @@
 using namespace std;
 using namespace tensorflow;
 
+namespace oodqn {
+
 // `chosen` is 0-based
 void AppendOnehotAction(vector<float>* v, int chosen, int num_actions) {
   for (int i = 0; i < num_actions; i++) {
@@ -90,7 +92,7 @@ void TFModel::RunHelper(const vector<pair<string, Tensor>>& feed,
 }
 
 
-void TFModel::RunVector(const vector<float>& input,
+void TFModel::RunVector(const Vec& input,
                         const string& placeholderName,
                         const string& outputName,
                         Tensor* output) {
@@ -106,11 +108,11 @@ void TFModel::RunVector(const vector<float>& input,
   RunHelper(feed, outputName, output);
 }
 
-void TFModel::RunMatrix(const vector<float>& input,
-                          const TensorShape& shape,
-                          const string& placeholderName,
-                          const string& outputName,
-                          Tensor* output) {
+void TFModel::RunMatrix(const Vec& input,
+                        const TensorShape& shape,
+                        const string& placeholderName,
+                        const string& outputName,
+                        Tensor* output) {
   const int d0 = shape.dim_size(0);
   const int d1 = shape.dim_size(1);
   
@@ -127,4 +129,6 @@ void TFModel::RunMatrix(const vector<float>& input,
 
   RunHelper(feed, outputName, output);
 }
+
+}  // namespace oodqn
 

@@ -1,5 +1,5 @@
 ffmpeg \
-  -framerate 50 \
+  -framerate 30 \
   -i $1%04d.png \
   -c:v libx264 \
   -pix_fmt yuv420p \

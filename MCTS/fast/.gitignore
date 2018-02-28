@@ -5,6 +5,7 @@ atariPlanner
 uctPlanner
 objectPlanner
 model_test
+planner
 
 # Saved frame images/videos
 *.png
