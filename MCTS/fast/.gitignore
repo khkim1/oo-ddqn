@@ -13,3 +13,4 @@ model_test
 # Don't upload large library files
 libtensorflow_cc.so
 libtensorflow_framework.so
+tf/
