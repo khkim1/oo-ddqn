@@ -10,7 +10,7 @@ namespace oodqn {
 
 class AtariState : public State {
 public:
-  AtariState() {};
+  AtariState() = delete;
   // Constructing from ale::getSnapshot()
   AtariState(const std::string&);
   void setSnapshot(const std::string&);

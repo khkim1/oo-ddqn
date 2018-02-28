@@ -6,6 +6,10 @@ uctPlanner
 objectPlanner
 model_test
 
+# Saved frame images/videos
+*.png
+*.mp4
+
 # Don't upload large library files
 libtensorflow_cc.so
 libtensorflow_framework.so
