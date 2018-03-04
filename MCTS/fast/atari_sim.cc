@@ -38,9 +38,6 @@ string AtariState::str() const {
 void AtariState::print() const {
   cout << str() << endl;
 }
-string AtariState::getType() const {
-  return "AtariState";
-}
 
 // 
 // AtariAction

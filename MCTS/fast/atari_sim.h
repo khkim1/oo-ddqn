@@ -23,7 +23,9 @@ public:
   bool equals_planning(const State*) const override;
   std::string str() const override;
   void print() const override;
-  std::string getType() const override;
+  inline std::string getType() const override {
+    return "AtariState";
+  }
 
 protected:
   std::string snapshot_;

@@ -34,33 +34,14 @@ public:
   bool equals_planning(const State*) const override;
   std::string str() const override;
   void print() const override;
-  std::string getType() const override;
+  inline std::string getType() const override {
+    return "AtariObjState";
+  }
 
 protected:
   std::string snapshot_;
   Vec objvec_;
 };
-
-/*
-class AtariAction : public Action {
-public:
-  // Constructing from ale::Action (enum)
-  AtariAction(const ale::Action);
-  ~AtariAction() {};
-  ale::Action getAleAction() const {
-    return action_;
-  }
-
-  // Overrides from base class
-  bool equals(const Action*) const override;
-  Action* clone() const override;
-  std::string str() const override;
-  void print() const override;
-
-protected:
-  ale::Action action_;
-};
-*/
 
 class AtariObjSim : public Simulator {
 public:

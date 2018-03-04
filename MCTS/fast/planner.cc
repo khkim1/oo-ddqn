@@ -1,21 +1,13 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <iostream>
-#include <fstream>
 #include <string>
-#include <ctime>
-#include <sstream>
 #include <vector>
-// #include <time.h>
-// #include <sys/stat.h>
-#include <stdio.h>
 
 #include "constants.h"
 #include "mcts.h"
 #include "atari_sim.h"
 #include "atari_obj_sim.h"
-// #include "obj_sim.h"
-// #include "util.h"
 
 DEFINE_string(rom_path, "", "Game Rom File");
 DEFINE_int32(num_traj, 20, "Sample trajectory numbers");
@@ -31,9 +23,6 @@ DEFINE_bool(obj_state, false,
             "Whether to use object state representation or not");
 DEFINE_string(frame_prefix, "", "Prefix for saved screen frames in PNG.");
 DEFINE_int32(frameskip, 4, "Frame skip");
-// DEFINE_double(leaf, 0, "Leaf Value");
-// DEFINE_bool(save_data, false, "True to save state and action pairs");
-// DEFINE_string(save_path, "output", "Path to save training data pairs");
 
 using namespace std;
 using namespace oodqn;

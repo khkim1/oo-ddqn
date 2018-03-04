@@ -77,6 +77,8 @@ planner.o: mcts.h atari_sim.h util.h tf_util.h
 		-o planner.o -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
 atari_obj_sim.o:
 	$(CXX) $(FLAGS) -c atari_obj_sim.cc -o atari_obj_sim.o 
+model_sim.o:
+	$(CXX) $(FLAGS) $(TF_FLAGS) -c model_sim.cc -o model_sim.o
 
 
 clean:

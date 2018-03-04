@@ -50,32 +50,6 @@ string AtariObjState::str() const {
 void AtariObjState::print() const {
   cout << str() << endl;
 }
-string AtariObjState::getType() const {
-  return "AtariObjState";
-}
-
-/*
-// 
-// AtariAction
-// 
-
-AtariAction::AtariAction(const ale::Action action) {
-  action_ = action;
-}
-bool AtariAction::equals(const Action* rhs) const {
-  const AtariAction* other = static_cast<const AtariAction*>(rhs);
-  return action_ == other->action_;
-}
-Action* AtariAction::clone() const {
-  return new AtariAction(*this);
-}
-std::string AtariAction::str() const {
-  return ALE_ACTION_NAMES[action_];
-}
-void AtariAction::print() const {
-  cout << str() << endl;
-}
-*/
 
 //
 // AtariObjSim

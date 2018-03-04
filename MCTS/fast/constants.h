@@ -61,8 +61,9 @@ public:
     std::string out;
     out.reserve(100);
     for (int i = 0; i < values_.size(); ++i) {
+      if (i > 0)
+        out.append(", ");
       out.append(std::to_string(values_[i]));
-      out.append(", ");
     }
     return ("[" + out + "]");
   }
