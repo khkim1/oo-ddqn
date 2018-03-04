@@ -5,10 +5,6 @@
 #include "tensorflow/core/public/session.h"
 #include "constants.h"
 
-using namespace std;
-using namespace tensorflow;
-using oodqn::Vec;
-
 namespace oodqn {
 
 void AppendOnehotAction(Vec* v, int chosen, int num_actions);
@@ -16,34 +12,37 @@ void AppendOnehotAction(Vec* v, int chosen, int num_actions);
 class TFModel {
   public:
     TFModel() = delete;
-    TFModel(const string&);
+    TFModel(const std::string&);
     // Disable copy constructor and assignment operator since they can mess
     // things up because of unique_ptr member variable.
     TFModel(const TFModel&) = delete;
     TFModel& operator= (const TFModel&) = delete;
+    inline std::string getModelPrefix() const {
+      return model_prefix_;
+    }
     virtual ~TFModel();
 
     // TODO
-    // Status Load(const string&);
+    // Status Load(const std::string&);
 
     void RunVector(const Vec& input,
-                   const string& placeholderName,
-                   const string& outputName,
-                   Tensor* output);
+                   const std::string& placeholderName,
+                   const std::string& outputName,
+                   tensorflow::Tensor* output);
 
     void RunMatrix(const Vec& input,
-                   const TensorShape& shape,
-                   const string& placeholderName,
-                   const string& outputName,
-                   Tensor* output);
+                   const tensorflow::TensorShape& shape,
+                   const std::string& placeholderName,
+                   const std::string& outputName,
+                   tensorflow::Tensor* output);
 
-    std::unique_ptr<Session> session_;
+    std::unique_ptr<tensorflow::Session> session_;
     std::string model_prefix_;
 
   private:
-    void RunHelper(const vector<pair<string, Tensor>>&, 
-                   const string& outputName,
-                   Tensor* output);
+    void RunHelper(
+        const std::vector<std::pair<std::string, tensorflow::Tensor>>&,
+        const std::string& outputName, tensorflow::Tensor* output);
 };
 
 }  // namespace oodqn

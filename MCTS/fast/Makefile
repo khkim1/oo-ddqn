@@ -4,7 +4,7 @@ ifeq ($(UNAME), Linux)
 	CXX := g++ -std=c++11
 	XITARI_ROOT := xitari/linux
 	TF_ROOT := tflinux
-	TF_FLAGS := -Wl,-rpath='$ORIGIN/lib' -I$(TF_ROOT)/include -L$(TF_ROOT)/lib 
+	TF_FLAGS := -Wl,-rpath='$ORIGIN/lib' -I$(TF_ROOT)/include -L$(TF_ROOT)/lib
 	TF_LDFLAGS := -ltensorflow_cc
 endif
 
@@ -12,7 +12,7 @@ ifeq ($(UNAME), Darwin)
 	CXX := clang++ -std=c++11
 	XITARI_ROOT := xitari/osx
 	TF_ROOT := tfmac
-	TF_FLAGS := -Wl,-rpath,'$ORIGIN/lib' -I$(TF_ROOT)/include -L$(TF_ROOT)/lib 
+	TF_FLAGS := -Wl,-rpath,'$ORIGIN/lib' -I$(TF_ROOT)/include -L$(TF_ROOT)/lib
 	TF_LDFLAGS := -ltensorflow_cc -ltensorflow_framework
 endif
 
@@ -29,11 +29,11 @@ atariUCTPlanner.o: atariUCTPlanner.cpp uct.hpp atari.hpp
 	$(CXX) $(FLAGS) -c atariUCTPlanner.cpp -o atariUCTPlanner.o \
 		-pthread -fPIC -DNDEBUG $(LDFLAGS)
 uctPlanner:	uctPlanner.o uct.o
-	$(CXX) $(FLAGS) uctPlanner.o uct.o -o uctPlanner 
-uct.o:	uct.cpp	uct.hpp 
+	$(CXX) $(FLAGS) uctPlanner.o uct.o -o uctPlanner
+uct.o:	uct.cpp	uct.hpp
 	$(CXX)  uct.cpp -c -o uct.o
 uctPlanner.o:	uctPlanner.cpp  uct.hpp
-	$(CXX)  uctPlanner.cpp -c -o uctPlanner.o 
+	$(CXX)  uctPlanner.cpp -c -o uctPlanner.o
 
 # New code for oodqn
 .PHONY all: objectPlanner model_test atariUCTPlanner
@@ -61,7 +61,7 @@ mcts.o: mcts.cc mcts.h constants.h
 	$(CXX) mcts.cc -c -o mcts.o
 
 atari_sim.o:
-	$(CXX) $(FLAGS) -c atari_sim.cc -o atari_sim.o 
+	$(CXX) $(FLAGS) -c atari_sim.cc -o atari_sim.o
 atariPlanner: atariPlanner.o mcts.o tf_util.o util.o atari_sim.o
 	$(CXX) $(FLAGS) $(TF_FLAGS) atariPlanner.o tf_util.o atari_sim.o mcts.o \
 		-o atariPlanner -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
@@ -76,7 +76,7 @@ planner.o: mcts.h atari_sim.h util.h tf_util.h
 	$(CXX) $(FLAGS) $(TF_FLAGS) -c planner.cc \
 		-o planner.o -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
 atari_obj_sim.o:
-	$(CXX) $(FLAGS) -c atari_obj_sim.cc -o atari_obj_sim.o 
+	$(CXX) $(FLAGS) $(TF_FLAGS) -c atari_obj_sim.cc -o atari_obj_sim.o
 model_sim.o:
 	$(CXX) $(FLAGS) $(TF_FLAGS) -c model_sim.cc -o model_sim.o
 
@@ -87,4 +87,4 @@ clean:
 		objectPlanner.o objectPlanner \
 		atari_sim.o mcts.o atariPlanner.o atariPlanner \
 		planner.o planner \
-		atari_obj_sim.o
+		atari_obj_sim.o model_sim.o

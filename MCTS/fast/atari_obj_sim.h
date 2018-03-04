@@ -3,8 +3,9 @@
 
 #include <string>
 #include <ale_interface.hpp>
-#include "mcts.h"
 #include "simulator.h"
+#include "mcts.h"
+#include "tf_util.h"
 
 namespace oodqn {
 
@@ -41,12 +42,18 @@ public:
 protected:
   std::string snapshot_;
   Vec objvec_;
+
+private:
+  void set_values(const std::string& snapshot, const Vec& objvec);
 };
 
 class AtariObjSim : public Simulator {
 public:
   AtariObjSim() = delete;
   AtariObjSim(const std::string& romFile, int frameskip);
+  // Use trained reward model
+  AtariObjSim(const std::string& romFile, int frameskip,
+              const std::string& reward_model_prefix);
   ale::ALEScreen getScreen() const;
   void screenToPNG(const std::string& filename) const;
   virtual ~AtariObjSim();
@@ -54,8 +61,6 @@ public:
   // Overrides from base class
   const State* getState() const override;
   void setState(const State*) override;
-  // const State* getPlanningState() const override;
-  // void setInternalState(const State&) override;
   double act(const Action*) override;
   void reset() override;
   bool isTerminal() const override;
@@ -66,8 +71,6 @@ public:
 	// Frameskip determines how many times actions are repeated.
 	const int frameskip_;
 
-	// double reward_;
-
   // Instance of ALE simulator.
 	ale::ALEInterface* ale_;
 
@@ -76,6 +79,13 @@ public:
 
 	// List of available actions.
   std::vector<const Action*> actions_;
+
+  // Reward model
+  bool use_reward_model_;
+  TFModel* reward_model_;
+
+private:
+  double predictReward(const Vec& objvec);
 };
 
 } // namespace oodqn

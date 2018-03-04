@@ -70,6 +70,7 @@ int main(int argc, char** argv) {
   } else {
     real_sim = new AtariSim(FLAGS_rom_path, FLAGS_frameskip);
   }
+
   if (FLAGS_plan_sim == "real") {
     if (FLAGS_obj_state) {
       plan_sim = new AtariObjSim(FLAGS_rom_path, FLAGS_frameskip);
@@ -77,11 +78,22 @@ int main(int argc, char** argv) {
       plan_sim = new AtariSim(FLAGS_rom_path, FLAGS_frameskip);
     }
   }
-  // else {
-  //   plan_sim = new ObjectSimulator(
-  //       FLAGS_state_model, FLAGS_reward_model, true, FLAGS_frameskip,
-  //       FLAGS_num_acts, AleScreenToObjState(real_sim->getScreen()));
-  // }
+  else {
+    // If we're using trained model of the world, at least the reward model
+    // should be given.
+    CHECK(FLAGS_reward_model != "") << "Reward model not specified.";
+
+    // We're only using the reward model with the true transition model.
+    if (FLAGS_state_model == "") {
+      plan_sim = new AtariObjSim(FLAGS_rom_path, FLAGS_frameskip,
+                                 FLAGS_reward_model);
+    }
+    // else {
+    //   plan_sim = new ObjectSimulator(
+    //       FLAGS_state_model, FLAGS_reward_model, true, FLAGS_frameskip,
+    //       FLAGS_num_acts, AleScreenToObjState(real_sim->getScreen()));
+    // }
+  }
   MCTSPlanner mcts(plan_sim, FLAGS_depth, FLAGS_num_traj, FLAGS_ucb,
                    FLAGS_gamma);
 
@@ -91,12 +103,13 @@ int main(int argc, char** argv) {
   double ret = 0;
   double rwd = 0;
   const int max_steps = 20000;
-  const bool using_model = (FLAGS_plan_sim == "model");
+  const bool using_state_model =
+    (FLAGS_plan_sim == "model" && FLAGS_state_model != "");
   Vec obj_state;
   // int data_index = 0;
 
   /*
-  if (using_model) {
+  if (using_state_model) {
     // Initial object state vector
     obj_state = AleScreenToObjState(real_sim->getScreen());
 
@@ -113,12 +126,13 @@ int main(int argc, char** argv) {
   }
   */
 
+  cout << "\n *** Starting planning *** \n" << endl;
   while (!real_sim->isTerminal() && steps < max_steps) {
     steps++;
     Action* action = nullptr;
 
     // With learned dynamics model
-    if (using_model) {
+    if (using_state_model) {
       /*
       if (plan_sim->actDiffer()) {
         if (prev_planned && (!mcts.terminalRoot())) {

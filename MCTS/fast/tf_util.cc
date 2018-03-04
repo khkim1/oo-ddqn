@@ -1,5 +1,6 @@
 #include "tf_util.h"
 
+#include <glog/logging.h>
 #include "tensorflow/cc/ops/const_op.h"
 #include "tensorflow/core/protobuf/meta_graph.pb.h"
 #include "tensorflow/core/public/session.h"
@@ -20,16 +21,6 @@ void AppendOnehotAction(vector<float>* v, int chosen, int num_actions) {
     }
   }
 }
-
-/*
-// TODO: Converts the output of ALE game screen into object state vector.
-const Vec AleScreenToObjState(const ale::ALEScreen& screen) {
-  const Vec out({ -0.77987421,   0.10062893,   1.,
-                  -0.02515723,   0.03773585,   1.,
-                   0.77987421,   0.01257862,   1. });
-  return out;
-}
-*/
 
 TFModel::TFModel(const string& path_prefix) {
   model_prefix_ = path_prefix;
@@ -74,6 +65,7 @@ TFModel::~TFModel() {
     cout << "Couldn't close session properly.";
   }
   session_.reset();
+  LOG(INFO) << "Model " << model_prefix_ << " succesfully deleted";
 }
 
 void TFModel::RunHelper(const vector<pair<string, Tensor>>& feed, 
