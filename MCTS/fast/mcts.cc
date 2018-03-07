@@ -1,9 +1,7 @@
-#include <algorithm>
-#include <cassert>
-#include <iostream>
-#include <glog/logging.h>
 #include "mcts.h"
-#include "constants.h"
+
+#include <algorithm>
+#include <glog/logging.h>
 
 using namespace std;
 
@@ -11,7 +9,7 @@ namespace oodqn {
 
 //
 // StateNode
-// 
+//
 
 StateNode::StateNode(
     ActionNode* _parent, const State* _state,
@@ -63,30 +61,10 @@ int StateNode::addActionNode() {
   ++next_action_idx_;
   return next_action_idx_ - 1;
 }
-/*
-vector<State*> StateNode::stateHistory(int length) {
-  int cnt = 0;
-  vector<State*> hist;
-  StateNode* cur = this;
-  assert(cur != nullptr);
-
-  while (cnt < length) {
-    hist.push_back(cur->state_);
-    cnt++;
-    if (cur->parentAct_ == nullptr) {
-      break;
-    }
-    cur = cur->parentAct_->parentState_;
-    assert(cur != nullptr);
-  }
-  std::reverse(hist.begin(), hist.end());
-  return hist;
-}
-*/
 
 //
 // ActionNode
-// 
+//
 
 ActionNode::ActionNode(StateNode* _parent) :
   parent_(_parent), q_value_(0), visits_(0) {}
@@ -125,9 +103,37 @@ bool ActionNode::containsNextState(const State* state) {
 
 //
 // MCTSPlanner
-// 
+//
 
-void MCTSPlanner::plan() {
+MCTSPlanner::MCTSPlanner(Simulator* sim, int max_depth, int num_traj,
+                         double ucb_scale, double gamma):
+  sim_(sim),
+  max_depth_(max_depth),
+  num_traj_(num_traj),
+  ucb_scale_(ucb_scale),
+  gamma_(gamma),
+  root_(nullptr) {}
+
+MCTSPlanner::~MCTSPlanner() {
+  // We don't own sim_, so don't delete it here.
+  clearTree();
+}
+
+void MCTSPlanner::setRootNode(const State* state,
+                  const std::vector<const Action*>& actions,
+                  double reward, bool terminal) {
+  if (root_ != nullptr) {
+    clearTree();
+  }
+  root_ = new StateNode(nullptr, state, actions, reward, terminal);
+}
+
+Action* MCTSPlanner::getAction() const{
+  const int idx = getGreedyBranchIndex();
+  return root_->actions_[idx];
+}
+
+void MCTSPlanner::plan(int step) {
   VLOG(1) << "Planning started.";
   CHECK(root_ != NULL) << "Root is NULL!";
 
@@ -139,7 +145,7 @@ void MCTSPlanner::plan() {
     root_->visits_++;
     offset++;
   }
-  VLOG(2) << "Planning offset: " << offset;
+  VLOG(2) << "Root offset: " << offset;
 
   for (int traj = offset; traj < num_traj_; ++traj) {
     VLOG(1) << "Planning trajectory: " << traj;
@@ -173,18 +179,18 @@ void MCTSPlanner::plan() {
           current = current->children_[uct_idx]->getStateNode(next_state);
           continue;
         }
-        
+
         // We encountered a new next state, so add a state node and rollout.
         else {
           StateNode* next_node = current->children_[uct_idx]->addStateNode(
               next_state, sim_->getActions(), reward, sim_->isTerminal());
 
-          mc_return = rollout(next_node, max_depth_);
+          mc_return = rollout(next_node, max_depth_, step, traj-offset);
           current = next_node;
           break;
         }
       }
-      
+
       // There is an unexplored action, so we perform rollout from that action.
       else {
         const int action_idx = current->addActionNode();
@@ -198,18 +204,18 @@ void MCTSPlanner::plan() {
 
         VLOG(2) << "New StateNode added: " << next_node;
 
-        mc_return = rollout(next_node, max_depth_);
+        mc_return = rollout(next_node, max_depth_, step, traj-offset);
         current = next_node;
         break;
       }
-    }  // max_depth_ 
+    }  // max_depth_
 
     // Backpropagate
     updateValues(current, mc_return);
   }  // num_traj_
 }
 
-int MCTSPlanner::getGreedyBranchIndex() {
+int MCTSPlanner::getGreedyBranchIndex() const {
   CHECK(root_ != nullptr) << "Root is NULL";
   vector<double> maximizer; //maximizer.clear();
   int size = root_->children_.size();
@@ -257,14 +263,15 @@ void MCTSPlanner::updateValues(StateNode* node, double mc_return) {
     totalReturn *= gamma_;
     totalReturn += node->reward_;
     // Update average Q value.
-    parent_action->q_value_ += 
+    parent_action->q_value_ +=
       (totalReturn - parent_action->q_value_) / parent_action->visits_;
     node = parent_action->parent_;
     node->visits_++;
   }
 }
 
-double MCTSPlanner::rollout(StateNode* node, int depth) {
+double MCTSPlanner::rollout(StateNode* node, int depth, int step, int traj) {
+  char frame_fn[80];
   double ret = 0;
   sim_->setState(node->state_);
   VLOG(2) << "Rollout begin";
@@ -274,17 +281,19 @@ double MCTSPlanner::rollout(StateNode* node, int depth) {
       break;
     }
     const vector<const Action*>& actions = sim_->getActions();
-    // Print the state vector
-    // VLOG(2) << sim_->getState()->str();
     int action_idx = rand() % actions.size();
     const double reward = sim_->act(actions[action_idx]);
+    if (step >= 0) {
+      sprintf(frame_fn, "%sstep.%04d_traj.%04d_depth.%03d.png",
+          rollout_prefix_.c_str(), step, traj, i);
+      sim_->saveFrame(frame_fn);
+    }
     ret += discnt * reward;
     discnt *= gamma_;
   }
   VLOG(2) << "Rollout reward: " << ret;
   return ret;
 }
-
 
 void MCTSPlanner::pruneState(StateNode * state) {
   int size = state->children_.size();
@@ -364,7 +373,6 @@ void MCTSPlanner::prune(Action* act, int history_size) {
   StateNode * next_root = nullptr;
   int size = root_->children_.size();
   for (int i = 0 ; i < size; ++i) {
-    // if (act->equals(root_->actions_[i])) {
     if (*act == *root_->actions_[i]) {
       VLOG(2) << "Action idx " << i << " "
               << root_->actions_[i]->str() << " is the new root: "
@@ -395,6 +403,13 @@ void MCTSPlanner::prune(Action* act, int history_size) {
   root_->parent_ = nullptr;
 
   VLOG(2) << "New root: " << root_;
+}
+
+void MCTSPlanner::clearTree() {
+  if (root_ != nullptr) {
+    pruneState(root_);
+  }
+  root_ = nullptr;
 }
 
 }  // namespace oodqn

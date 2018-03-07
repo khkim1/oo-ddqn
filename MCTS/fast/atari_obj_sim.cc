@@ -11,9 +11,9 @@ namespace tf = tensorflow;
 
 namespace oodqn {
 
-// 
+//
 // AtariObjState
-// 
+//
 
 AtariObjState::AtariObjState(const string& snapshot, const Vec& objvec) {
   VLOG(2) << "Creating AtariObjState from snapshot and objvec " << objvec.str();
@@ -71,13 +71,13 @@ AtariObjSim::AtariObjSim(const std::string& rom_file, int frameskip) :
   // Print information about the created simulator
   cout << "\n >>> AtariObjSim Initialized <<<"
        << "\n  * ROM: " << rom_file
-       << "\n  * Min reward: " << ale_->minReward() 
+       << "\n  * Min reward: " << ale_->minReward()
        << "\n  * Max reward: " << ale_->maxReward()
        << "\n  * Available actions: " << stringifyActions(actions_)
        << endl;
 }
 AtariObjSim::AtariObjSim(const std::string& rom_file, int frameskip,
-                         const string& reward_model_prefix) : 
+                         const string& reward_model_prefix) :
   frameskip_(frameskip),
   use_reward_model_(true)
 {
@@ -99,7 +99,7 @@ AtariObjSim::AtariObjSim(const std::string& rom_file, int frameskip,
   // Print information about the created simulator
   cout << "\n >>> AtariObjSim Initialized <<<"
        << "\n  * ROM: " << rom_file
-       << "\n  * Min reward: " << ale_->minReward() 
+       << "\n  * Min reward: " << ale_->minReward()
        << "\n  * Max reward: " << ale_->maxReward()
        << "\n  * Reward model: " << reward_model_->getModelPrefix()
        << "\n  * Available actions: " << stringifyActions(actions_)
@@ -136,14 +136,36 @@ double AtariObjSim::act(const Action* action) {
   const AtariAction* atari_action = dynamic_cast<const AtariAction*>(action);
   const ale::Action ale_action = atari_action->getAleAction();
   for (int i = 0; i < frameskip_ && !ale_->gameOver(); ++i) {
+    const float true_reward = ale_->act(ale_action);
+    float single_reward;
     if (use_reward_model_) {
       VLOG(5) << "Getting reward from a trained model";
-      ale_->act(ale_action);
-      reward += predictReward(AleScreenToObjState(ale_->getScreen()));
+      const Vec _objvec = AleScreenToObjState(ale_->getScreen());
+      single_reward = predictReward(_objvec);
+      reward += single_reward;
+      reward_dbg_total++;
+
+      // **** For debugging reward model ****
+      //
+      // if (true_reward != single_reward) {
+      //   char fn[80];
+      //   char _tr, _pr;
+      //   _tr = true_reward > 0 ? 'p' : (true_reward < 0 ? 'n' : 'z');
+      //   _pr = single_reward > 0 ? 'p' : (single_reward < 0 ? 'n' : 'z');
+      //   sprintf(fn, "reward_%05d_%c_%c.png", reward_dbg_total, _tr, _pr);
+      //   saveFrame(fn);
+      //   reward_dbg_diff++;
+      //   cout << "REWARD_ACC: "
+      //        << reward_dbg_diff << ", "
+      //        << reward_dbg_total << ", "
+      //        << (((float)reward_dbg_diff)/reward_dbg_total)
+      //        << endl;
+      // }
+      // ************************************
     }
     else {
       VLOG(5) << "Getting reward from ALE";
-      reward += ale_->act(ale_action);
+      reward += true_reward;
     }
   }
   current_state_->setSnapshotAndObjvec(

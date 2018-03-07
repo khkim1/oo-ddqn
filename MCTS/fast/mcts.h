@@ -1,8 +1,8 @@
 #ifndef __MCTS_H__
 #define __MCTS_H__
 
-#include <vector>
 #include <cmath>
+#include <vector>
 #include "constants.h"
 #include "simulator.h"
 
@@ -82,57 +82,26 @@ public:
 class MCTSPlanner
 {
 public:
-  // Simulator interface.
-  Simulator* sim_;
-
-  // uct parameters
-  int max_depth_;
-  int num_traj_;
-  double ucb_scale_;
-  double gamma_;
-  // double leafValue_;
-  // double endEpisodeValue_;
-  // rand seed value
-  StateNode* root_;
-
-  MCTSPlanner(Simulator* _sim, int _max_depth, int _num_traj, double _ucb_scale,
-      double _gamma):
-    sim_(_sim),
-    max_depth_(_max_depth),
-    num_traj_(_num_traj),
-    ucb_scale_(_ucb_scale),
-    gamma_(_gamma),
-    root_(nullptr) {}
+  MCTSPlanner(Simulator* sim, int max_depth, int num_traj, double ucb_scale,
+              double gamma);
 
   // We don't own sim_, so don't delete it here.
-  ~MCTSPlanner() {
-    clearTree();
-  }
+  virtual ~MCTSPlanner(); 
 
   // Set the new root node.
-  void setRootNode(const State* _state, const std::vector<const Action*>& _actions,
-                   double _reward, bool _terminal) {
-    if (root_ != nullptr) {
-      clearTree();
-    }
-    root_ = new StateNode(nullptr, _state, _actions, _reward, _terminal);
-  }
+  void setRootNode(const State* state,
+                   const std::vector<const Action*>& actions,
+                   double reward, bool terminal); 
 
-  // Plan a single step.
-  void plan();
+  // Plan a single step.  If step >= 0, record the first rollout
+  // used during planning.
+  void plan(int step = -1);
 
   // Obtain the planned action for root after planning
-  Action* getAction() {
-    const int idx = getGreedyBranchIndex();
-    // cout << "[dbg] MCTS: Greedy branch index: " << idx << endl;
-    // cout << "[dbg] MCTS: Corresponding act: ";
-    // root_->actVect_[idx]->print();
-    // cout << endl;
-    return root_->actions_[idx];
-  }
+  Action* getAction() const;
 
   // Return the action with highest value for root node
-  int getGreedyBranchIndex();
+  int getGreedyBranchIndex() const;
 
   // Return the index of action to sample.
   // Add a new action node to tree if the action wass never sampled
@@ -141,8 +110,8 @@ public:
   // Backpropagate along the path from leaf to root based on the
   // MC sample of return by updating values and counters.
   void updateValues(StateNode* node, double mc_return);
-  // Sample trajectory to the specified depth
-  double rollout(StateNode* node, int depth);
+  // Sample trajectory to the specified depth.
+  double rollout(StateNode* node, int depth, int step, int traj);
 
   // Memory management and search tree pruning.
   void prune(Action* acttion, int history_size);
@@ -151,23 +120,29 @@ public:
   void pruneAncestors(int history_size);
 
   // Wipe the search tree.
-  void clearTree() {
-    if (root_ != nullptr) {
-      pruneState(root_);
-    }
-    root_ = nullptr;
-  }
+  void clearTree();
 
-  bool terminalRoot() {
+  inline bool terminalRoot() const {
     return root_->terminal_;
   }
 
-  // void realStep(SimAction* act, State* newRealState, float rwd, bool isTerminal);
+  inline void setRolloutPrefix(const std::string& prefix) {
+    rollout_prefix_ = prefix;
+  }
 
-  // Return the most visited action for root node
-  // int getMostVisitedBranchIndex();
-  // // Sample to the end of an episode
-  // double MC_Sampling(StateNode* node);
+protected:
+  // Simulator interface.
+  Simulator* sim_;
+
+  // UCT hyperparameters.
+  int max_depth_;
+  int num_traj_;
+  double ucb_scale_;
+  double gamma_;
+  StateNode* root_;
+
+  // File name prefix for saved frames from all rollouts.
+  std::string rollout_prefix_;
 
   // void printRootValues() {
   //   int size = root_->nodeVect_.size();

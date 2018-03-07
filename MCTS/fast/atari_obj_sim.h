@@ -75,7 +75,7 @@ public:
 	ale::ALEInterface* ale_;
 
   // This should always match the ALE state.
-	AtariObjState* current_state_; 
+	AtariObjState* current_state_;
 
 	// List of available actions.
   std::vector<const Action*> actions_;
@@ -83,6 +83,10 @@ public:
   // Reward model
   bool use_reward_model_;
   TFModel* reward_model_;
+
+  // **** For debugging reward model ****
+  int reward_dbg_total = 0;
+  int reward_dbg_diff = 0;
 
 private:
   double predictReward(const Vec& objvec);

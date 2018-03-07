@@ -22,6 +22,7 @@ DEFINE_string(plan_sim, "model", "Simulator to use for planning. "
 DEFINE_bool(obj_state, false,
             "Whether to use object state representation or not");
 DEFINE_string(frame_prefix, "", "Prefix for saved screen frames in PNG.");
+DEFINE_string(rollout_prefix, "", "Prefix for saved rollout screen frames.");
 DEFINE_int32(frameskip, 4, "Frame skip");
 
 using namespace std;
@@ -49,6 +50,7 @@ int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
   srand(time(0));
   const bool save_frame = (FLAGS_frame_prefix != "");
+  const bool save_rollout = (FLAGS_rollout_prefix != "");
   char frame_fn[80];
 
   cout << "\n >>> Configuration <<<"
@@ -61,7 +63,10 @@ int main(int argc, char** argv) {
        << "\n  * State model prefix: " << FLAGS_state_model
        << "\n  * Reward model prefix: " << FLAGS_reward_model
        << "\n  * State representation: " << (FLAGS_obj_state ? "object" : "raw")
-       << "\n  * Saving screen frames: " << (save_frame ? FLAGS_frame_prefix : "no")
+       << "\n  * Saving screen frames: "
+       << (save_frame ? FLAGS_frame_prefix : "no")
+       << "\n  * Saving rollout frames: "
+       << (save_rollout ? FLAGS_rollout_prefix : "no")
        << endl;
 
   Simulator *real_sim, *plan_sim; 
@@ -96,8 +101,11 @@ int main(int argc, char** argv) {
   }
   MCTSPlanner mcts(plan_sim, FLAGS_depth, FLAGS_num_traj, FLAGS_ucb,
                    FLAGS_gamma);
+  if (save_rollout) {
+    mcts.setRolloutPrefix(FLAGS_rollout_prefix);
+  }
 
-  int steps = 0;
+  int step = 0;
   bool prev_planned = false;
   Action* prev_action = NULL;
   double ret = 0;
@@ -127,8 +135,8 @@ int main(int argc, char** argv) {
   */
 
   cout << "\n *** Starting planning *** \n" << endl;
-  while (!real_sim->isTerminal() && steps < max_steps) {
-    steps++;
+  while (!real_sim->isTerminal() && step < max_steps) {
+    step++;
     Action* action = nullptr;
 
     // With learned dynamics model
@@ -167,7 +175,7 @@ int main(int argc, char** argv) {
       ObjectAction* obj_action = dynamic_cast<ObjectAction*>(action);
       AtariAction* conv_act = ObjToAtariAction(obj_action, real_sim);
       prev_action = action;
-      cout << "\nstep: " << steps << " live: " << real_sim->lives() << " act: ";
+      cout << "\nstep: " << step << " live: " << real_sim->lives() << " act: ";
       conv_act->print();
 
       // Observe reward and next state from true env.
@@ -192,7 +200,10 @@ int main(int argc, char** argv) {
           mcts.setRootNode(real_sim->getState(), real_sim->getActions(),
                            rwd, real_sim->isTerminal());
         }
-        mcts.plan();
+        if (save_rollout)
+          mcts.plan(step);
+        else
+          mcts.plan(-1);
         action = mcts.getAction();
         prev_planned = true;
       }
@@ -201,19 +212,19 @@ int main(int argc, char** argv) {
       rwd = real_sim->act(action);
 
       ret += rwd;
-      cout << "step: " << steps << " act: " << action->str()
+      cout << "step: " << step << " act: " << action->str()
            << " rwd: " << rwd << " total: " << ret << endl;
     }
 
     // Save screen if flag is true.
     if (save_frame) {
-      sprintf(frame_fn, "%s%04d.png", FLAGS_frame_prefix.c_str(), steps);
+      sprintf(frame_fn, "%s%05d.png", FLAGS_frame_prefix.c_str(), step);
       real_sim->saveFrame(frame_fn);
     }
   }
   cout << "Final reward: " << rwd <<" total: " << ret << endl;
 
-  cout <<  "steps: " << steps << "\nr: " << ret << endl;
+  cout <<  "step: " << step << "\nr: " << ret << endl;
   delete real_sim;
   delete plan_sim;
   return 0;
