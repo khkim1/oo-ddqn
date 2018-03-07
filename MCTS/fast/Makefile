@@ -77,6 +77,13 @@ planner.o: mcts.h atari_sim.h util.h tf_util.h
 		-o planner.o -pthread -fPIC -DNDEBUG $(TF_LDFLAGS) $(LDFLAGS)
 atari_obj_sim.o:
 	$(CXX) $(FLAGS) -c atari_obj_sim.cc -o atari_obj_sim.o 
+gen_frames.o:
+	$(CXX) $(FLAGS) -c gen_frames.cc -o gen_frames.o
+
+# For debugging
+gen_frames: gen_frames.o atari_sim.o
+	$(CXX) $(FLAGS) gen_frames.o atari_sim.o -o gen_frames $(LDFLAGS)
+
 
 
 clean:
@@ -85,4 +92,5 @@ clean:
 		objectPlanner.o objectPlanner \
 		atari_sim.o mcts.o atariPlanner.o atariPlanner \
 		planner.o planner \
-		atari_obj_sim.o
+		atari_obj_sim.o \
+		gen_frames

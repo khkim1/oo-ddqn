@@ -82,30 +82,30 @@ inline Vec AleScreenToObjState(const ale::ALEScreen& screen){
   if (!ant_coord_x.empty()){
     object_coord[0] = (
         std::accumulate(ant_coord_x.begin(), ant_coord_x.end(), 0.0)
-        / ant_coord_x.size()) / 79.5 - 1.0;
+        / ant_coord_x.size());
     object_coord[1] = (
         std::accumulate(ant_coord_y.begin(), ant_coord_y.end(), 0.0)
-        / ant_coord_y.size()) / 79.5 - 1.0;
+        / ant_coord_y.size());
     object_coord[2] = 1;
   }
 
   if (!ball_coord_x.empty()) {
     object_coord[3] = (
         std::accumulate(ball_coord_x.begin(), ball_coord_x.end(), 0.0)
-        / ball_coord_x.size()) / 79.5 - 1.0;
+        / ball_coord_x.size());
     object_coord[4] = (
         std::accumulate(ball_coord_y.begin(), ball_coord_y.end(), 0.0)
-        / ball_coord_y.size()) / 79.5 - 1.0;
+        / ball_coord_y.size());
     object_coord[5] = 1;
   }
 
   if (!pro_coord_x.empty()) {
     object_coord[6] = (
         std::accumulate(pro_coord_x.begin(), pro_coord_x.end(), 0.0)
-        / pro_coord_x.size()) / 79.5 - 1.0;
+        / pro_coord_x.size());
     object_coord[7] = (
         std::accumulate(pro_coord_y.begin(), pro_coord_y.end(), 0.0)
-        / pro_coord_y.size()) / 79.5 - 1.0;
+        / pro_coord_y.size());
     object_coord[8] = 1;
   }
 
