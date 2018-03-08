@@ -7,9 +7,8 @@ objectPlanner
 model_test
 planner
 
-# Saved frame images/videos
+# Saved frame images
 *.png
-*.mp4
 
 # Don't upload large library files
 libtensorflow_cc.so
