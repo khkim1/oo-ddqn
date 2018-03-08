@@ -146,13 +146,13 @@ double AtariObjSim::act(const Action* action) {
       reward_dbg_total++;
 
       // **** For debugging reward model ****
-      //
+
       // if (true_reward != single_reward) {
       //   char fn[80];
       //   char _tr, _pr;
       //   _tr = true_reward > 0 ? 'p' : (true_reward < 0 ? 'n' : 'z');
       //   _pr = single_reward > 0 ? 'p' : (single_reward < 0 ? 'n' : 'z');
-      //   sprintf(fn, "reward_%05d_%c_%c.png", reward_dbg_total, _tr, _pr);
+      //   sprintf(fn, "reward_diff_%05d_%c_%c.png", reward_dbg_total, _tr, _pr);
       //   saveFrame(fn);
       //   reward_dbg_diff++;
       //   cout << "REWARD_ACC: "
@@ -161,7 +161,7 @@ double AtariObjSim::act(const Action* action) {
       //        << (((float)reward_dbg_diff)/reward_dbg_total)
       //        << endl;
       // }
-      // ************************************
+
     }
     else {
       VLOG(5) << "Getting reward from ALE";

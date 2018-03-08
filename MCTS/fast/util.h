@@ -30,8 +30,8 @@ inline vector<Pixel> CropScreen(const ale::ALEScreen& screen){
 
   vector<Pixel> output;
 
-  std::copy(array.begin() + 35*160,
-            array.begin() + 35*160 + 160*160,
+  std::copy(array.begin() + 34*160,
+            array.begin() + 34*160 + 160*160,
             std::back_inserter(output));
   assert(output.size() == 160 * 160);
   return output;
